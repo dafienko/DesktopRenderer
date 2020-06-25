@@ -3,6 +3,7 @@
 
 #include "glExtensions.h"
 #include "vectorMath.h"
+#include <Vfw.h>
 
 #define CHECK_GL_ERRORS check_gl_err(__FILE__, __LINE__)
 
@@ -14,7 +15,7 @@ typedef struct camera {
 camera currentCamera;
 
 void init();
-void display(HDC hdc, int dWidth, int dHeight);
+void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight);
 float draw(int dWidth, int dHeight);
 void end();
 

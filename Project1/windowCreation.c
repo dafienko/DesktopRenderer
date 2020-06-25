@@ -2,6 +2,8 @@
 
 #include "winUtil.h"
 
+#pragma comment(lib, "gdi32")
+
 HWND create_independent_window(LPCWSTR wndName, vec2i* size, vec2i* pos, WNDCLASS* wndClass) {
 	/*default null arguments*/
 	if (size == NULL) {
@@ -43,7 +45,7 @@ void initOpenglWndClass(HINSTANCE hInstance) {
 	openglWndClass.hInstance = hInstance;
 	openglWndClass.hIcon = NULL;
 	openglWndClass.hCursor = NULL;
-	openglWndClass.hbrBackground = NULL;
+	openglWndClass.hbrBackground = GetStockObject(WHITE_BRUSH);
 	openglWndClass.lpszMenuName = NULL;
 	openglWndClass.lpszClassName = openglWndClassName;
 

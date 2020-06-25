@@ -3,12 +3,17 @@
 #include "desktopPainter.h"
 #include "renderer.h"
 #include "program.h"
+#include <Vfw.h>
+
+#pragma comment(lib, "Vfw32.lib")
 
 WNDPROC mainWndProc(HWND, UINT, WPARAM, LPARAM);
 
 HBITMAP hbmp;
 HDC painterDC;
 HWND hMainWnd, hOpenglWnd; 
+
+HDRAWDIB hdd;
 
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
 	WNDCLASS wndClass = { 0 };
@@ -25,9 +30,13 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
 
 	RegisterClass(&wndClass);
 
+
+
+	int scale = 1;
+
 	int vWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
 	int vHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-	int scale = 1;
+	
 	vec2i wndSize = (vec2i){ vWidth / scale, vHeight / scale };
 
 	
@@ -49,6 +58,14 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
 
 	resize(wndSize.x, wndSize.y);
 	//ShowWindow(hMainWnd, nShowCmd);
+	//ShowWindow(hOpenglWnd, nShowCmd);
+
+
+	hdd = DrawDibOpen();
+	if (hdd == NULL) {
+		error("Couldn't init an hdrawdib");
+	}
+	
 
 	programInit();
 
@@ -80,32 +97,20 @@ int run_message_loop() {
 			}
 		}
 
-		/* draw to main window */
-		/*
+		GetClientRect(hOpenglWnd, &rect);
+		int w = rect.right - rect.left;
+		int h = rect.bottom - rect.top;
+		//draw(w, h);
+
+		///*
 		hdc = GetDC(hMainWnd);
 		GetClientRect(hMainWnd, &rect);
-		int width = rect.right - rect.left;
-		int height = rect.bottom - rect.top;
-		display(hdc, width, height);
-		//draw(width, height);
+		w = rect.right - rect.left;
+		h = rect.bottom - rect.top;
+		display(hdd, hdc, w, h);
 		ReleaseDC(hMainWnd, hdc);
 		//*/
 
-		/*
-		GetClientRect(hOpenglWnd, &rect);
-		int width = rect.right - rect.left;
-		int height = rect.bottom - rect.top;
-		float dt = draw(width, height);
-
-		hdc = GetDC(hOpenglWnd);
-		char* text = calloc(50, sizeof(char));
-		sprintf_s(text, 50, "dt: %0.5f", dt);
-		TextOutA(hdc, 0, 0, text, strlen(text));
-		free(text);
-		ReleaseDC(hOpenglWnd, hdc);
-		//*/
-
-		/* draw to desktop window */
 		paintDesktop();
 	}
 }
@@ -119,13 +124,15 @@ WNDPROC mainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	case WM_DESTROY:
 		PostQuitMessage(69);
 		return 0;
-	case WM_PAINT:
-		hdc = GetDC(hWnd);
-		ReleaseDC(hWnd, hdc);
-
-		break;
 	case WM_SIZE:
-		GetClientRect(hWnd, &rect);
+		//resize(LOWORD(lParam), HIWORD(lParam));
+		
+		GetClientRect(hMainWnd, &rect);
+		int w = rect.right - rect.left;
+		int h = rect.bottom - rect.top;
+
+		SetWindowPos(hOpenglWnd, HWND_TOP, 0, 0, w, h, SWP_HIDEWINDOW);
+
 
 		PostMessage(hWnd, WM_PAINT, 0, 0);
 		return 0;
@@ -144,5 +151,5 @@ void on_paint_desktop(HDC desktopHDC) {
 	int vHeight = GetSystemMetrics(SM_CYSCREEN);
 	*/
 
-	display(desktopHDC, vWidth, vHeight);
+	display(hdd, desktopHDC, vWidth, vHeight);
 }

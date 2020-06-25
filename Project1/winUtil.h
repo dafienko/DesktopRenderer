@@ -16,5 +16,6 @@ HGLRC create_rc_from_window(HDC*);
 
 void setup_hdc_for_opengl(HDC hdc);
 
+void error(char* desc);
 
 #endif

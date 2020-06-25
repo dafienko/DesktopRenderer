@@ -7,6 +7,8 @@
 #include "timer.h"
 #include "winUtil.h"
 
+#pragma comment(lib, "Vfw32.lib")
+
 #ifndef PI
 #define PI 3.14159265359
 #endif
@@ -18,6 +20,8 @@ int vWidth, vHeight;
 GLuint prog;
 GLuint rbo = 0;
 GLuint tcb = 0;
+int numPBOs = 3;
+GLuint* pbo = NULL;
 GLuint framebuffer = 0;
 drawable d = { 0 };
 
@@ -38,7 +42,8 @@ void use_rc(HDC* hdc, HGLRC* hrc) {
 	}
 }
 
-int renderToRenderBuffer = 0;
+int renderToRenderBuffer = 1;
+int renderToPixelbuffer = 1;
 
 void init() {
 	GLuint vs = create_vertex_shader("shaders\\basic.vs");
@@ -46,7 +51,7 @@ void init() {
 	GLuint shaders[] = { vs, fs };
 	prog = create_program(shaders, 2);
 	
-	obj_data od = get_obj_data("models\\monkey.obj");
+	obj_data od = get_obj_data("models\\OpelBlitz.obj");
 
 	d = obj_to_drawable(&od);
 	d.hProgram = prog;
@@ -60,29 +65,40 @@ void init() {
 
 	wglSwapIntervalEXT(0);
 
+	vWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+	vHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+	floatBuffer = calloc(4 * vWidth * vHeight, sizeof(float));
+	lpBits = calloc(4 * vWidth * vHeight, sizeof(unsigned char));
+
 	if (renderToRenderBuffer) {
 		glGenFramebuffers(1, &framebuffer);
 
 		glGenTextures(1, &tcb);
 		glBindTexture(GL_TEXTURE_2D, tcb);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1920, 1080, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, vWidth, vHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	
 		glGenRenderbuffers(1, &rbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1920, 1080);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, vWidth, vHeight);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tcb, 0);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 	}
+	if (renderToPixelbuffer) {
+		pbo = calloc(numPBOs, sizeof(GLuint));
+		glGenBuffers(numPBOs, pbo);
 
 
-	vWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-	vHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-	floatBuffer = calloc(4 * vWidth * vHeight, sizeof(float));
-	lpBits = calloc(4 * vWidth * vHeight, sizeof(unsigned char));
+		for (int i = numPBOs - 1; i >= 0; i--) {
+			glBindBuffer(GL_PIXEL_PACK_BUFFER, *(pbo + i));
+			glBufferData(GL_PIXEL_PACK_BUFFER, vWidth * vHeight * 4, NULL, GL_STREAM_READ);
+		}
+
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+	}
 
 	initialized = 1;
 }
@@ -101,7 +117,7 @@ void resize(int width, int height) {
 
 static int glOffset, bmOffset;
 static float b, g, r, a;
-void float_image_to_char_image(int width, int height) {
+void float_image_to_char_image(int width, int height, int reverse) {
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
 			glOffset = y * width + x;
@@ -110,7 +126,12 @@ void float_image_to_char_image(int width, int height) {
 			r = *(floatBuffer + glOffset * 4 + 2);
 			a = *(floatBuffer + glOffset * 4 + 3);
 
-			bmOffset = ((height - 1) - y) * width + x;
+			if (reverse) {
+				bmOffset = ((height - 1) - y) * width + x;
+			}
+			else {
+				bmOffset = glOffset;
+			}
 			*(lpBits + bmOffset * 4 + 0) = (unsigned char)(b * 255);
 			*(lpBits + bmOffset * 4 + 1) = (unsigned char)(g * 255);
 			*(lpBits + bmOffset * 4 + 2) = (unsigned char)(r * 255);
@@ -151,7 +172,10 @@ float draw(int dWidth, int dHeight) {
 	return dt;
 }
 
-void display(HDC hdc, int dWidth, int dHeight) {
+unsigned int numDownloads = 0;
+int dx = 0;
+unsigned char* ptr;
+void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight) {
 	if (initialized) {
 		static HBITMAP hbmp;
 		static HDC hdcMem;
@@ -159,27 +183,63 @@ void display(HDC hdc, int dWidth, int dHeight) {
 
 		float dt = draw(dWidth, dHeight);
 
-		/* bitblt framebuffer to hdc */
-		///*
-		
 		memset(floatBuffer, 0, 4 * vpWidth * vpHeight);
 		memset(lpBits, 0, 4 * vpWidth * vpHeight);
+		
+		if (renderToPixelbuffer) {
+			if (numDownloads < numPBOs) {
+				glBindBuffer(GL_PIXEL_PACK_BUFFER, *(pbo + dx));
+				CHECK_GL_ERRORS;
+				glReadPixels(0, 0, vpWidth, vpHeight, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+				CHECK_GL_ERRORS;
+			}
+			else {
+				glBindBuffer(GL_PIXEL_PACK_BUFFER, *(pbo + dx));
+				ptr = (unsigned char*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_WRITE);
 
-		glReadPixels(0, 0, vpWidth, vpHeight, GL_BGRA, GL_FLOAT, floatBuffer);
-		float_image_to_char_image(vpWidth, vpHeight);
-		hbmp = CreateCompatibleBitmap(hdc, vpWidth, vpHeight);
-		SetBitmapBits(hbmp, vpWidth * vpHeight * 4, lpBits);
+				if (ptr != NULL) {
+					int nBytes = vpWidth * vpHeight * 4;
+					memcpy(lpBits, ptr, nBytes);
+					glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+					glReadPixels(0, 0, vpWidth, vpHeight, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+				}
+				else {
+					CHECK_GL_ERRORS;
+				}
+			}
 
-		hdcMem = CreateCompatibleDC(hdc);
-		hOld = SelectObject(hdcMem, hbmp);
-		DeleteObject(hOld);
+			glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+		}
+		else {
+			glReadPixels(0, 0, vpWidth, vpHeight, GL_BGRA, GL_FLOAT, floatBuffer);
+			float_image_to_char_image(vpWidth, vpHeight, 0);
+		}
+
 		
 
-		//BitBlt(hdc, 0, 0, vpWidth, vpHeight, hdcMem, 0, 0, SRCCOPY);
-		StretchBlt(hdc, 0, 0, dWidth, dHeight, hdcMem, 0, 0, vpWidth, vpHeight, SRCCOPY);
-	
-		DeleteDC(hdcMem);
-		DeleteObject(hbmp);
+		BITMAPINFOHEADER bih = { 0 };
+		bih.biSize = sizeof(BITMAPINFOHEADER);
+		bih.biWidth = vpWidth;
+		bih.biHeight = vpHeight;
+		bih.biPlanes = 1;
+		bih.biBitCount = 32;
+		bih.biCompression = 0;
+		bih.biSizeImage = 0;
+		bih.biXPelsPerMeter = 0;
+		bih.biYPelsPerMeter = 0;
+		bih.biClrUsed = 0;
+		bih.biClrImportant = 0;
+		
+		DrawDibDraw(
+			hdd, hdc,
+			0, 0,  /* dest pos */
+			dWidth, dHeight, /* dest size */
+			&bih,
+			lpBits,
+			0, 0, /* source pos */
+			vpWidth, vpHeight, /* source size */
+			DDF_NOTKEYFRAME);
+
 
 		char* text = calloc(50, sizeof(char));
 		sprintf_s(text, 50, "dt: %0.5f", dt);
@@ -187,7 +247,13 @@ void display(HDC hdc, int dWidth, int dHeight) {
 		free(text);
 		//*/
 		 
-		
+		++dx;
+		dx = dx % numPBOs;
+
+		numDownloads++;
+		if (numDownloads == 200000) {
+			numDownloads = numPBOs;
+		}
 	}
 }
 

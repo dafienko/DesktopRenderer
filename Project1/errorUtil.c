@@ -103,3 +103,8 @@ void check_gl_err(const char* file, const int line) {
 		}
 	}
 }
+
+void error(char* desc) {
+	MessageBoxA(NULL, "Error", desc, MB_OK);
+	exit(69);
+}
