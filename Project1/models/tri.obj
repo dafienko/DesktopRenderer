@@ -1,0 +1,9 @@
+v -1.0 -1.0 0.0 # bottom left
+v -1.0 1.0 0.0 # top left
+v 1.0 -1.0 0.0 # bottom right
+v 1.0 1.0 0.0 # top right
+vn 0.5 0.0 0.0 # red
+vn 0.0 0.5 0.0 # green
+vn 0.0 0.0 0.5 # blue
+vn 1.0 1.0 1.0 # white 
+f 1//1 3//2 4//3 2//4

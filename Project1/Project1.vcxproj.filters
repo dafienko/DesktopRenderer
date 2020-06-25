@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\vectorMath">
+      <UniqueIdentifier>{dde281a7-28bb-448e-9f0d-0bb7a80d4bad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\winUtil">
+      <UniqueIdentifier>{3ebb94bc-a5ce-429f-8bad-0ef68e92815f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\desktopPainter">
+      <UniqueIdentifier>{ae022e01-2ff7-4626-88a4-79032112c10c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\assetLoader">
+      <UniqueIdentifier>{b8858149-13a1-42c6-b14b-221cddee22b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\renderer">
+      <UniqueIdentifier>{dfd4b3cf-c540-4ad7-960b-ad1caa0c2f48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\matrixMath">
+      <UniqueIdentifier>{0a2b6210-3b25-4942-be5c-b5be27431664}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\stringUtil">
+      <UniqueIdentifier>{c9c5dc5c-4eb8-4464-a872-01fbbb16f73d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\timer">
+      <UniqueIdentifier>{2b14f32f-f9b4-446b-b468-da30f2b49285}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="floatVectorMath.c">
+      <Filter>Source Files\vectorMath</Filter>
+    </ClCompile>
+    <ClCompile Include="windowCreation.c">
+      <Filter>Source Files\winUtil</Filter>
+    </ClCompile>
+    <ClCompile Include="intVectorMath.c">
+      <Filter>Source Files\vectorMath</Filter>
+    </ClCompile>
+    <ClCompile Include="glWndSetup.c">
+      <Filter>Source Files\winUtil</Filter>
+    </ClCompile>
+    <ClCompile Include="glExtensions.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="desktopPainterMain.c">
+      <Filter>Source Files\desktopPainter</Filter>
+    </ClCompile>
+    <ClCompile Include="shaders.c">
+      <Filter>Source Files\assetLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="fileUtil.c">
+      <Filter>Source Files\assetLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="errorUtil.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="matrixMath.c">
+      <Filter>Source Files\matrixMath</Filter>
+    </ClCompile>
+    <ClCompile Include="objFileUtil.c">
+      <Filter>Source Files\assetLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="strip.c">
+      <Filter>Source Files\stringUtil</Filter>
+    </ClCompile>
+    <ClCompile Include="split.c">
+      <Filter>Source Files\stringUtil</Filter>
+    </ClCompile>
+    <ClCompile Include="drawableUtil.c">
+      <Filter>Source Files\assetLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="program.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="timer.c">
+      <Filter>Source Files\timer</Filter>
+    </ClCompile>
+    <ClCompile Include="find.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="keyboard.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dibUtil.c">
+      <Filter>Source Files\winUtil</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="winUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vectorMath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="glExtensions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wglext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="glext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="desktopPainter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="assetLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="matrixMath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stringUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="program.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="keyboard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,8 @@
+﻿  main.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(16,36): warning C4047: '=': 'WNDPROC' differs in levels of indirection from 'WNDPROC (__cdecl *)(HWND,UINT,WPARAM,LPARAM)'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(55,33): warning C4013: 'run_message_loop' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(60,15): warning C4133: 'function': incompatible types - from 'HDC' to 'HWND'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(60,27): warning C4133: 'function': incompatible types - from 'HWND' to 'HDC'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(79,22): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(134,49): warning C4047: 'return': 'WNDPROC' differs in levels of indirection from 'LRESULT'
+  Project1.vcxproj -> C:\Users\dafie\source\repos\GLTesting4\x64\Debug\Project1.exe
