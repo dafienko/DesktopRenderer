@@ -1,4 +1,5 @@
 #include "assetLoader.h"
+#include "errors.h"
 #include <stdio.h>
 
 #define MAX_LINE_WIDTH 500

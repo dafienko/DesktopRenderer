@@ -6,12 +6,10 @@
 #include <gl/GL.h>
 
 typedef struct {
+	int numLines;
 	char** lines;
 	int* lengths;
-	int numLines;
 } lines_data;
-
-void check_std_err(const char* desc, const int e);
 
 lines_data get_file_lines(const char* filename);
 void free_lines_data(lines_data* ld);
@@ -41,5 +39,15 @@ typedef struct {
 
 drawable obj_to_drawable(obj_data* od);
 void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix);
+
+typedef struct {
+	unsigned int width;
+	unsigned int height;
+	char* lpBits;
+} image_bit_data;
+
+image_bit_data read_png_file(char* filename);
+image_bit_data read_png_file_simple(char* filename);
+void free_image_bit_data(image_bit_data* ibd);
 
 #endif

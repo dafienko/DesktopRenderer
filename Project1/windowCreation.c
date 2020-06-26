@@ -1,6 +1,7 @@
 #pragma once
 
 #include "winUtil.h"
+#include "errors.h"
 
 #pragma comment(lib, "gdi32")
 

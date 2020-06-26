@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "assetLoader.h"
 #include "glExtensions.h"
+#include "errors.h"
 
 void check_shader_compile_errors(GLuint hShader) {
 	GLint compiled = 0;

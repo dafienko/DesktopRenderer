@@ -6,6 +6,7 @@
 #include "program.h"
 #include "timer.h"
 #include "winUtil.h"
+#include "errors.h"
 
 #pragma comment(lib, "Vfw32.lib")
 
@@ -45,13 +46,15 @@ void use_rc(HDC* hdc, HGLRC* hrc) {
 int renderToRenderBuffer = 1;
 int renderToPixelbuffer = 1;
 
+image_bit_data ibd = { 0 };
+
 void init() {
 	GLuint vs = create_vertex_shader("shaders\\basic.vs");
 	GLuint fs = create_fragment_shader("shaders\\basic.fs");
 	GLuint shaders[] = { vs, fs };
 	prog = create_program(shaders, 2);
 	
-	obj_data od = get_obj_data("models\\OpelBlitz.obj");
+	obj_data od = get_obj_data("models\\cube.obj");
 
 	d = obj_to_drawable(&od);
 	d.hProgram = prog;
@@ -99,6 +102,8 @@ void init() {
 
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 	}
+
+	ibd = read_png_file_simple("assets/rainbow.png");
 
 	initialized = 1;
 }
@@ -230,14 +235,15 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight) {
 		bih.biClrUsed = 0;
 		bih.biClrImportant = 0;
 		
+		
 		DrawDibDraw(
 			hdd, hdc,
-			0, 0,  /* dest pos */
-			dWidth, dHeight, /* dest size */
+			0, 0,  // dest pos 
+			dWidth, dHeight, // dest size 
 			&bih,
 			lpBits,
-			0, 0, /* source pos */
-			vpWidth, vpHeight, /* source size */
+			0, 0, // source pos 
+			vpWidth, vpHeight, // source size
 			DDF_NOTKEYFRAME);
 
 

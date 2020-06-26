@@ -1,12 +1,13 @@
 #pragma once
 
+#include "errors.h"
+#include <Windows.h>
 #include <stdio.h>
-#include "winUtil.h"
-#include "assetLoader.h"
 #include <gl/GL.h>
 #include <gl/GLU.h>
+#include "glExtensions.h"
 
-void check_errors(LPCSTR fileName, int lineNumber) {
+void check_errors(const char* fileName, int lineNumber) {
 	int e = GetLastError();
 
 	if (e != 0) {

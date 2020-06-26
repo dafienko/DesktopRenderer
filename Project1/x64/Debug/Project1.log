@@ -1,13 +1,5 @@
-﻿  main.c
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(21,36): warning C4047: '=': 'WNDPROC' differs in levels of indirection from 'WNDPROC (__cdecl *)(HWND,UINT,WPARAM,LPARAM)'
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(72,33): warning C4013: 'run_message_loop' undefined; assuming extern returning int
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(77,15): warning C4133: 'function': incompatible types - from 'HDC' to 'HWND'
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(77,27): warning C4133: 'function': incompatible types - from 'HWND' to 'HDC'
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(96,22): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(141,49): warning C4047: 'return': 'WNDPROC' differs in levels of indirection from 'LRESULT'
-  renderer.c
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(190,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(245,12): warning C4013: 'sprintf_s' undefined; assuming extern returning int
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(246,44): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
-  Generating Code...
+﻿  renderer.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(195,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(251,12): warning C4013: 'sprintf_s' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(252,44): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
   Project1.vcxproj -> C:\Users\dafie\source\repos\GLTesting4\x64\Debug\Project1.exe

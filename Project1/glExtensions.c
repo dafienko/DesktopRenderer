@@ -2,6 +2,7 @@
 #include "glExtensions.h"
 #include <gl/GL.h>
 #include <gl/GLU.h>
+#include "errors.h"
 
 #pragma comment(lib, "opengl32")
 

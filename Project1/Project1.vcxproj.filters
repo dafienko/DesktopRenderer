@@ -37,6 +37,12 @@
     <Filter Include="Source Files\timer">
       <UniqueIdentifier>{2b14f32f-f9b4-446b-b468-da30f2b49285}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\libpng">
+      <UniqueIdentifier>{5670787a-1dbc-45c7-9520-5e8d4f5c42bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\zlib">
+      <UniqueIdentifier>{4d32447b-f781-4bf7-a8da-373499cb50b6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -102,6 +108,99 @@
     <ClCompile Include="dibUtil.c">
       <Filter>Source Files\winUtil</Filter>
     </ClCompile>
+    <ClCompile Include="pngReader.c">
+      <Filter>Source Files\assetLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\png.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngerror.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngget.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngmem.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngpread.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngread.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngrio.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngrtran.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngrutil.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngset.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngtrans.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngwio.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngwrite.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngwtran.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\pngwutil.c">
+      <Filter>Source Files\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\adler32.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\compress.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\deflate.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\gzclose.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\gzlib.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\gzread.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\gzwrite.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\infback.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\inffast.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\inflate.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\inftrees.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\trees.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\uncompr.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\zutil.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lpng1637\crc32.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="winUtil.h">
@@ -141,6 +240,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="keyboard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="errors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lpng1637\png.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\zlib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
