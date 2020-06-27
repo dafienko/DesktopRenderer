@@ -1,8 +1,10 @@
-﻿  pngReader.c
-C:\Users\dafie\source\repos\GLTesting4\Project1\pngReader.c(89,31): warning C4018: '<': signed/unsigned mismatch
-C:\Users\dafie\source\repos\GLTesting4\Project1\pngReader.c(90,35): warning C4018: '<': signed/unsigned mismatch
+﻿  renderer.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(209,45): warning C4020: 'draw_skybox': too many actual parameters
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(239,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(313,12): warning C4013: 'sprintf_s' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(314,44): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
   Generating code
-  1 of 463 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
+  1 of 467 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     8 functions had inline decision re-evaluated but remain unchanged
   Finished generating code

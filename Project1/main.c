@@ -31,7 +31,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
 
 	RegisterClass(&wndClass);
 
-	int scale = 4;
+	int scale = 1;
 
 	int vWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
 	int vHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
@@ -56,7 +56,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
 	init();
 
 	resize(wndSize.x, wndSize.y);
-	ShowWindow(hMainWnd, nShowCmd);
+	//ShowWindow(hMainWnd, nShowCmd);
 	//ShowWindow(hOpenglWnd, nShowCmd);
 
 

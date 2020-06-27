@@ -1,5 +1,6 @@
 ﻿  renderer.c
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(195,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(251,12): warning C4013: 'sprintf_s' undefined; assuming extern returning int
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(252,44): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(209,45): warning C4020: 'draw_skybox': too many actual parameters
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(239,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(313,12): warning C4013: 'sprintf_s' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(314,44): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
   Project1.vcxproj -> C:\Users\dafie\source\repos\GLTesting4\x64\Debug\Project1.exe

@@ -35,10 +35,11 @@ typedef struct {
 	GLuint* vbo;
 	GLuint hProgram; 
 	GLuint numFaces;
+	vec3f position, rotation, scale;
 } drawable;
 
 drawable obj_to_drawable(obj_data* od);
-void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix);
+void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLuint skyboxTexture);
 
 typedef struct {
 	unsigned int width;
@@ -46,8 +47,12 @@ typedef struct {
 	char* lpBits;
 } image_bit_data;
 
-image_bit_data read_png_file(char* filename);
-image_bit_data read_png_file_simple(char* filename);
+image_bit_data read_png_file(const char* filename);
+image_bit_data read_png_file_simple(const char* filename);
 void free_image_bit_data(image_bit_data* ibd);
+
+image_bit_data get_image_rect(const image_bit_data src, int x, int y, int cx, int cy);
+
+GLuint create_skybox_texture(const char* filename);
 
 #endif

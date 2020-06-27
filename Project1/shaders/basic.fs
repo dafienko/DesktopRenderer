@@ -7,6 +7,8 @@ in vec3 worldPos;
 
 out vec4 color;
 
+layout (binding=0) uniform samplerCube skybox;
+
 float PI = 3.14159265359;
 vec3 lightDir = normalize(vec3(-1, -2, -1.5));
 float SHININESS = 16;
@@ -29,5 +31,8 @@ void main(void) {
 	}
 	
 	color = AMBIENT + vec4(specular, min(diffuse + specular, 1), min(diffuse + specular, 1), 1.0f);
+	
+	vec3 bounce = reflect(camDir, norm);
+	color = texture(skybox, bounce);
 	//color = vec4(norm, 1.0f);
 }

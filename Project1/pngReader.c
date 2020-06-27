@@ -10,7 +10,7 @@
 #define uint unsigned int
 
 
-image_bit_data read_png_file(char* filename) {
+image_bit_data read_png_file(const char* filename) {
     image_bit_data ibd = { 0 };
     
     png_structp	png_ptr;
@@ -145,7 +145,7 @@ image_bit_data read_png_file(char* filename) {
     return ibd;
 }
 
-image_bit_data read_png_file_simple(char* filename) {
+image_bit_data read_png_file_simple(const char* filename) {
     png_image image; /* The control structure used by libpng */
     image_bit_data ibd = { 0 };
     ibd.lpBits = NULL;
@@ -168,6 +168,8 @@ image_bit_data read_png_file_simple(char* filename) {
             png_image_finish_read(&image, NULL, buffer, 0, NULL);
     }
     
+    
+
     ibd.width = image.width;
     ibd.height = image.height;
     

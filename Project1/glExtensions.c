@@ -74,6 +74,8 @@ void GLEInit() {
     glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)getProc("glGenFramebuffers");
     glMapBuffer = (PFNGLMAPBUFFERPROC)getProc("glMapBuffer");
     glUnmapBuffer = (PFNGLUNMAPBUFFERPROC)getProc("glUnmapBuffer");
+    glActiveTexture = (PFNGLACTIVETEXTUREPROC)getProc("glActiveTexture");
+    glTexStorage2D = (PFNGLTEXSTORAGE2DPROC)getProc("glTexStorage2D");
 
     initialized = 1;
 }

@@ -38,10 +38,13 @@ drawable obj_to_drawable(obj_data* od) {
 	return d;
 }
 
-void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix) {
+void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLuint skyboxTexture) {
 	static GLuint perspectiveLoc, mvLoc, mLoc, cposLoc, scaleLoc;
 	
 	glUseProgram(d->hProgram);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
 
 	glBindVertexArray(*(d->vao + 0));
 
@@ -63,18 +66,18 @@ void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix) {
 	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, vals);
 	free(vals);
 	
-	mat4f mMatrix = from_position_and_rotation((vec3f) { 0.0f, -0.0f, -8.0f }, (vec3f) { 0.0f, 0.0f, 0.0f });
+	mat4f mMatrix = from_position_and_rotation(d->position, d->rotation);
 	vals = get_vals_mat4f(mMatrix);
 	glUniformMatrix4fv(mLoc, 1, GL_FALSE, vals);
 	free(vals);
 
-	mat4f mvMatrix = mat_mul_mat(cameraMatrix, from_translation(0.0f, 0.0f, -8.0f));
+	mat4f mvMatrix = mat_mul_mat(cameraMatrix, mMatrix);
 	vals = get_vals_mat4f(mvMatrix);
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, vals);
 	free(vals);
 	
 	glUniform3f(cposLoc, currentCamera.position.x, currentCamera.position.y, currentCamera.position.z);
-	glUniform3f(scaleLoc, 3, 3, 3);
+	glUniform3f(scaleLoc, d->scale.x, d->scale.y, d->scale.z);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *(d->vbo + 2));
 

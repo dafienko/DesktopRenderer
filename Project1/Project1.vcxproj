@@ -150,6 +150,7 @@
     <ClCompile Include="floatVectorMath.c" />
     <ClCompile Include="glExtensions.c" />
     <ClCompile Include="glWndSetup.c" />
+    <ClCompile Include="imageUtil.c" />
     <ClCompile Include="keyboard.c" />
     <ClCompile Include="lpng1637\adler32.c" />
     <ClCompile Include="lpng1637\compress.c" />
@@ -188,6 +189,7 @@
     <ClCompile Include="program.c" />
     <ClCompile Include="renderer.c" />
     <ClCompile Include="shaders.c" />
+    <ClCompile Include="skyboxLoader.c" />
     <ClCompile Include="split.c" />
     <ClCompile Include="strip.c" />
     <ClCompile Include="timer.c" />

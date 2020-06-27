@@ -18,13 +18,17 @@ timer t = { 0 };
 int vpWidth = 0;
 int vpHeight = 0;
 int vWidth, vHeight;
-GLuint prog;
-GLuint rbo = 0;
-GLuint tcb = 0;
+GLuint prog, skyboxProg;
+GLuint rbo, tcb;
+
 int numPBOs = 3;
 GLuint* pbo = NULL;
 GLuint framebuffer = 0;
-drawable d = { 0 };
+
+GLuint skyboxTexture;
+
+drawable skybox = { 0 };
+drawable model = { 0 };
 
 float* floatBuffer = NULL;
 unsigned char* lpBits = NULL;
@@ -48,22 +52,39 @@ int renderToPixelbuffer = 1;
 
 image_bit_data ibd = { 0 };
 
+image_bit_data ibd, top;
+
 void init() {
 	GLuint vs = create_vertex_shader("shaders\\basic.vs");
 	GLuint fs = create_fragment_shader("shaders\\basic.fs");
 	GLuint shaders[] = { vs, fs };
 	prog = create_program(shaders, 2);
-	
-	obj_data od = get_obj_data("models\\cube.obj");
 
-	d = obj_to_drawable(&od);
-	d.hProgram = prog;
-	free_obj_data(&od);
+	GLuint sbvs = create_vertex_shader("shaders\\skybox.vs");
+	GLuint sbfs = create_fragment_shader("shaders\\skybox.fs");
+	GLuint shaders2[] = { sbvs, sbfs };
+	skyboxProg = create_program(shaders2, 2);
+	
+	obj_data cubeObj = get_obj_data("models\\cube.obj");
+	skybox = obj_to_drawable(&cubeObj);
+	skybox.hProgram = skyboxProg;
+	skybox.scale = (vec3f){ 10.0f, 10.0f, 10.0f };
+	skybox.position = (vec3f){ 0, 0, 0 };
+	skybox.rotation = (vec3f){ 0, 0, 0 };
+	free_obj_data(&cubeObj);
+
+	obj_data modelObj = get_obj_data("models\\monkeySmooth.obj");
+	model = obj_to_drawable(&modelObj);
+	model.hProgram = prog;
+	model.scale = (vec3f){ 2.0f, 2.0f, 2.0f };
+	model.position = (vec3f){ 0, 0, -4.0f };
+	model.rotation = (vec3f){ 0, 0, 0 };
+	free_obj_data(&modelObj);
 
 	timer_start(&t);
 
 	currentCamera = (camera){ 0 };
-	currentCamera.position = (vec3f){ 0.0f, 0, 0 };
+	currentCamera.position = (vec3f){ 0.0f, 0, 8.0f };
 	currentCamera.rotation = (vec3f){ 0, 0, 0 };
 
 	wglSwapIntervalEXT(0);
@@ -103,7 +124,10 @@ void init() {
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 	}
 
-	ibd = read_png_file_simple("assets/rainbow.png");
+	skyboxTexture = create_skybox_texture("assets/skybox.png");
+
+	ibd = read_png_file_simple("assets/skybox.png");
+	top = get_image_rect(ibd, 512, 0, 512, 512);
 
 	initialized = 1;
 }
@@ -145,18 +169,44 @@ void float_image_to_char_image(int width, int height, int reverse) {
 	}
 }
 
+void draw_skybox(mat4f perspectiveMatrix) {
+	glDisable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+
+	glDisable(GL_DEPTH_TEST);
+	glDepthFunc(GL_ALWAYS);
+
+	static mat4f cameraMatrix;
+	cameraMatrix = rotate_xyz(-currentCamera.rotation.x, -currentCamera.rotation.y, -currentCamera.rotation.z);
+
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+	drawable_draw(&skybox, perspectiveMatrix, cameraMatrix, skyboxTexture);
+}
+
+float fov = 50.0f;
+
 float draw(int dWidth, int dHeight) {
 	float dt = timer_reset(&t);
 	onFrame(dt);
 
 	int fps = (int)(1.0f / dt);
 
-	/* draw instances to framebuffer */
+	/* calculate universal matrices for this frame*/
 	static mat4f cameraMatrix;
 
+	cameraMatrix = from_position_and_rotation(inverse_vec3f(currentCamera.position), inverse_vec3f(currentCamera.rotation));
+	cameraMatrix = mat_mul_mat(new_identity(), cameraMatrix);
+
+	perspectiveMatrix = new_perspective(2, 10000, fov, ((float)dWidth / (float)dHeight));
+
+	/* draw everything else */
 	glClearColor(.5f, .5f, .5f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClear(GL_DEPTH_BUFFER_BIT);
+
+	/* draw the skybox */
+	draw_skybox(perspectiveMatrix, cameraMatrix);
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
@@ -164,15 +214,9 @@ float draw(int dWidth, int dHeight) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	cameraMatrix = from_position_and_rotation(inverse_vec3f(currentCamera.position), inverse_vec3f(currentCamera.rotation));
-	cameraMatrix = mat_mul_mat(new_identity(), cameraMatrix);
-
-	perspectiveMatrix = new_perspective(2, 10000, 70.0f, ((float)dWidth / (float)dHeight));
-
-	drawable_draw(&d, perspectiveMatrix, cameraMatrix);
+	drawable_draw(&model, perspectiveMatrix, cameraMatrix, skyboxTexture);
 
 	SwapBuffers(glContextHDC);
-
 	
 	return dt;
 }
@@ -235,7 +279,7 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight) {
 		bih.biClrUsed = 0;
 		bih.biClrImportant = 0;
 		
-		
+		///*
 		DrawDibDraw(
 			hdd, hdc,
 			0, 0,  // dest pos 
@@ -245,6 +289,24 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight) {
 			0, 0, // source pos 
 			vpWidth, vpHeight, // source size
 			DDF_NOTKEYFRAME);
+		//*/
+
+		/*
+		//hbmp = CreateCompatibleBitmap(hdc, vpWidth, vpHeight);
+		hbmp = CreateBitmap(top.width, top.height, 1, 32, top.lpBits);
+		////SetBitmapBits(hbmp, ibd.height * ibd.width * 4, ibd.lpBits);
+
+		hdcMem = CreateCompatibleDC(hdc);
+		hOld = SelectObject(hdcMem, hbmp);
+		DeleteObject(hOld);
+
+
+		BitBlt(hdc, 0, 0, top.width, top.height, hdcMem, 0, 0, SRCCOPY);
+		////StretchBlt(hdc, 0, 0, dWidth, dHeight, hdcMem, 0, 0, vpWidth, vpHeight, SRCCOPY);
+
+		DeleteDC(hdcMem);
+		DeleteObject(hbmp);
+		*/
 
 
 		char* text = calloc(50, sizeof(char));
