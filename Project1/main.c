@@ -31,13 +31,15 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
 
 	RegisterClass(&wndClass);
 
-	int scale = 1;
+	float scale = 1;
 
 	int vWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
 	int vHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-	
-	vec2i wndSize = (vec2i){ vWidth / scale, vHeight / scale };
+	int sWidth = GetSystemMetrics(SM_CXSCREEN);
+	int sHeight = GetSystemMetrics(SM_CYSCREEN);
 
+	vec2i wndSize = (vec2i){ vWidth / scale, vHeight / scale };
+	//wndSize = (vec2i){ 800, 600 };
 	
 
 	hMainWnd = create_independent_window(L"Main Window", &wndSize, NULL, &wndClass);
@@ -53,7 +55,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
 
 	GLEInit(); // must be initialized after a context has been made current
 	
-	init();
+	init(wndSize.x, wndSize.y);
 
 	resize(wndSize.x, wndSize.y);
 	//ShowWindow(hMainWnd, nShowCmd);
@@ -96,17 +98,12 @@ int run_message_loop() {
 			}
 		}
 
-		GetClientRect(hOpenglWnd, &rect);
-		int w = rect.right - rect.left;
-		int h = rect.bottom - rect.top;
-		//draw(w, h);
-
 		///*
 		hdc = GetDC(hMainWnd);
-		GetClientRect(hMainWnd, &rect);
-		w = rect.right - rect.left;
-		h = rect.bottom - rect.top;
-		display(hdd, hdc, w, h);
+		GetWindowRect(hMainWnd, &rect);
+		int w = rect.right - rect.left;
+		int h = rect.bottom - rect.top;
+		//display(hdd, hdc, w, h);
 		ReleaseDC(hMainWnd, hdc);
 		//*/
 

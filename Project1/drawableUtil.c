@@ -38,10 +38,15 @@ drawable obj_to_drawable(obj_data* od) {
 	return d;
 }
 
+
+
 void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLuint skyboxTexture) {
-	static GLuint perspectiveLoc, mvLoc, mLoc, cposLoc, scaleLoc;
-	
+	static GLuint perspectiveLoc, mvLoc, mLoc, cposLoc, scaleLoc,  /* random bullcrap */
+		maoLoc, mAlbedoLoc, mMetallicLoc, mRoughnessLoc; /* material bullcrap */
+
 	glUseProgram(d->hProgram);
+
+	//buffer_pointlight_data((vec4f) {d->position.x, d->position.y, d->position.z, 0.0f});
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
@@ -61,6 +66,10 @@ void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLu
 	mvLoc = glGetUniformLocation(d->hProgram, "mvMatrix");
 	cposLoc = glGetUniformLocation(d->hProgram, "cameraPos");
 	scaleLoc = glGetUniformLocation(d->hProgram, "scale");
+	maoLoc = glGetUniformLocation(d->hProgram, "m.ao");
+	mAlbedoLoc = glGetUniformLocation(d->hProgram, "m.albedo");
+	mMetallicLoc = glGetUniformLocation(d->hProgram, "m.metallic");
+	mRoughnessLoc = glGetUniformLocation(d->hProgram, "m.roughness");
 	
 	float* vals = get_vals_mat4f(perspectiveMatrix);
 	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, vals);
@@ -78,6 +87,11 @@ void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLu
 	
 	glUniform3f(cposLoc, currentCamera.position.x, currentCamera.position.y, currentCamera.position.z);
 	glUniform3f(scaleLoc, d->scale.x, d->scale.y, d->scale.z);
+
+	glUniform3f(mAlbedoLoc, d->material.color.x, d->material.color.y, d->material.color.z);
+	glUniform1f(maoLoc, d->material.ao);
+	glUniform1f(mMetallicLoc, d->material.metallic);
+	glUniform1f(mRoughnessLoc, d->material.roughness);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *(d->vbo + 2));
 

@@ -30,12 +30,21 @@ typedef struct {
 obj_data get_obj_data(const char* filename);
 void free_obj_data(obj_data* od);
 
+typedef struct material {
+	vec3f color;
+	float metallic;
+	float roughness;
+	float ao;
+} material;
+material load_material_file(const char* filename);
+
 typedef struct {
 	GLuint* vao;
 	GLuint* vbo;
 	GLuint hProgram; 
 	GLuint numFaces;
 	vec3f position, rotation, scale;
+	material material;
 } drawable;
 
 drawable obj_to_drawable(obj_data* od);
@@ -54,5 +63,7 @@ void free_image_bit_data(image_bit_data* ibd);
 image_bit_data get_image_rect(const image_bit_data src, int x, int y, int cx, int cy);
 
 GLuint create_skybox_texture(const char* filename);
+
+GLuint create_png_texture(const char* filename);
 
 #endif

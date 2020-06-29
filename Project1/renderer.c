@@ -10,27 +10,31 @@
 
 #pragma comment(lib, "Vfw32.lib")
 
+
+
 #ifndef PI
 #define PI 3.14159265359
 #endif
 timer t = { 0 };
 
-int vpWidth = 0;
-int vpHeight = 0;
-int vWidth, vHeight;
-GLuint prog, skyboxProg;
+int bufferWidth, bufferHeight;
+GLuint prog, skyboxProg, blurProg, ssaaProg;
 GLuint rbo, tcb;
+GLuint aarbo, aafbo, aatex;
+GLuint aavao, aavbo;
+GLuint tex;
 
 int numPBOs = 3;
 GLuint* pbo = NULL;
 GLuint framebuffer = 0;
+
+GLuint lightbo = 0;
 
 GLuint skyboxTexture;
 
 drawable skybox = { 0 };
 drawable model = { 0 };
 
-float* floatBuffer = NULL;
 unsigned char* lpBits = NULL;
 
 int initialized = 0;
@@ -47,25 +51,36 @@ void use_rc(HDC* hdc, HGLRC* hrc) {
 	}
 }
 
-int renderToRenderBuffer = 1;
-int renderToPixelbuffer = 1;
+pointlight pl = { 0 };
 
-image_bit_data ibd = { 0 };
+int antialiased = 1;
+int scale = 2;
 
-image_bit_data ibd, top;
+void init(int width, int height) {
+	int sampleSize = 2; // samples per pixel is sampleSize^2
 
-void init() {
-	GLuint vs = create_vertex_shader("shaders\\basic.vs");
-	GLuint fs = create_fragment_shader("shaders\\basic.fs");
+
+	GLuint vs = create_vertex_shader("shaders\\brdf.vs");
+	GLuint fs = create_fragment_shader("shaders\\brdf.fs");
 	GLuint shaders[] = { vs, fs };
 	prog = create_program(shaders, 2);
+
+	GLuint bvs = create_vertex_shader("shaders\\blur.vs");
+	GLuint bfs = create_fragment_shader("shaders\\blur.fs");
+	GLuint bshaders[] = { bvs, bfs };
+	blurProg = create_program(bshaders, 2);
+
+	GLuint ssvs = create_vertex_shader("shaders\\ssaa.vs");
+	GLuint ssfs = create_fragment_shader("shaders\\ssaa.fs");
+	GLuint ssshaders[] = { ssvs, ssfs };
+	ssaaProg = create_program(ssshaders, 2);
 
 	GLuint sbvs = create_vertex_shader("shaders\\skybox.vs");
 	GLuint sbfs = create_fragment_shader("shaders\\skybox.fs");
 	GLuint shaders2[] = { sbvs, sbfs };
 	skyboxProg = create_program(shaders2, 2);
 	
-	obj_data cubeObj = get_obj_data("models\\cube.obj");
+	obj_data cubeObj= get_obj_data("models\\cube.obj");
 	skybox = obj_to_drawable(&cubeObj);
 	skybox.hProgram = skyboxProg;
 	skybox.scale = (vec3f){ 10.0f, 10.0f, 10.0f };
@@ -73,7 +88,7 @@ void init() {
 	skybox.rotation = (vec3f){ 0, 0, 0 };
 	free_obj_data(&cubeObj);
 
-	obj_data modelObj = get_obj_data("models\\monkeySmooth.obj");
+	obj_data modelObj = get_obj_data("models\\sphere.obj");
 	model = obj_to_drawable(&modelObj);
 	model.hProgram = prog;
 	model.scale = (vec3f){ 2.0f, 2.0f, 2.0f };
@@ -89,84 +104,161 @@ void init() {
 
 	wglSwapIntervalEXT(0);
 
-	vWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-	vHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-	floatBuffer = calloc(4 * vWidth * vHeight, sizeof(float));
-	lpBits = calloc(4 * vWidth * vHeight, sizeof(unsigned char));
+	lpBits = calloc(4 * width * height, sizeof(unsigned char));
 
-	if (renderToRenderBuffer) {
-		glGenFramebuffers(1, &framebuffer);
-
-		glGenTextures(1, &tcb);
-		glBindTexture(GL_TEXTURE_2D, tcb);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, vWidth, vHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	if (antialiased) {
+		glGenTextures(1, &aatex);
+		glBindTexture(GL_TEXTURE_2D, aatex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	
-		glGenRenderbuffers(1, &rbo);
-		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, vWidth, vHeight);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width * scale, scale * height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tcb, 0);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-	}
-	if (renderToPixelbuffer) {
-		pbo = calloc(numPBOs, sizeof(GLuint));
-		glGenBuffers(numPBOs, pbo);
+		// create a renderbuffer object to store depth info
+		glGenRenderbuffers(1, &aarbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, aarbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width * scale, scale * height);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
+		// create a framebuffer object
+		glGenFramebuffers(1, &aafbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, aafbo);
 
-		for (int i = numPBOs - 1; i >= 0; i--) {
-			glBindBuffer(GL_PIXEL_PACK_BUFFER, *(pbo + i));
-			glBufferData(GL_PIXEL_PACK_BUFFER, vWidth * vHeight * 4, NULL, GL_STREAM_READ);
+		// attach the texture to FBO color attachment point
+		glFramebufferTexture2D(GL_FRAMEBUFFER,        // 1. fbo target: GL_FRAMEBUFFER
+			GL_COLOR_ATTACHMENT0,  // 2. attachment point
+			GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
+			aatex,				   // 4. tex ID
+			0);                    // 5. mipmap level: 0(base)
+
+		// attach the renderbuffer to depth attachment point
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
+			GL_DEPTH_ATTACHMENT, // 2. attachment point
+			GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
+			aarbo);              // 4. rbo ID
+
+		// check FBO status
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE) {
+			MessageBoxA(NULL, "Error", "You screwed something up making a framebuffer", MB_OK);
+			exit(69);
 		}
 
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+		// switch back to window-system-provided framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		/* generate plane vertex object */
+		glGenVertexArrays(1, &aavao);
+		glBindVertexArray(aavao);
+
+		glGenBuffers(1, &aavbo);
+		glBindBuffer(GL_ARRAY_BUFFER, aavbo);
+		float p = 1.0f;
+		vec2f qPositions[] = {
+			{-p, -p},
+			{p, -p},
+			{p, p},
+			{-p, p}
+		};
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vec2f) * 4, qPositions, GL_STATIC_DRAW);
 	}
+
+
+	glGenFramebuffers(1, &framebuffer);
+
+	glGenTextures(1, &tcb);
+	glBindTexture(GL_TEXTURE_2D, tcb);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	bufferWidth = width;
+	bufferHeight = height;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tcb, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+	pbo = calloc(numPBOs, sizeof(GLuint));
+	glGenBuffers(numPBOs, pbo);
+
+
+	for (int i = numPBOs - 1; i >= 0; i--) {
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, *(pbo + i));
+		glBufferData(GL_PIXEL_PACK_BUFFER, width * height * 4, NULL, GL_STREAM_READ);
+	}
+
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
 
 	skyboxTexture = create_skybox_texture("assets/skybox.png");
 
-	ibd = read_png_file_simple("assets/skybox.png");
-	top = get_image_rect(ibd, 512, 0, 512, 512);
+	maxPointLights = 500;
+	pointlights = calloc(maxPointLights, sizeof(pointlight*));
+	pl.position = (vec4f){ 4.0f, 0.0f, -4.0f, 0.0f };
+	pl.color = (vec4f){ 1.0f, 0.0f, 0.0f, 1.0f };
+	pl.intensity = 1.0f;
+	pl.range = 10.0f;
+	*(pointlights + 0) = &pl;
 
 	initialized = 1;
 }
 
-void resize(int width, int height) {
-	glViewport(0, 0, width, height);
+pointlight* get_closest_pointlights(vec4f position) {
+	pointlight closestPointlights[MAX_POINTLIGHTS_PER_OBJECT];
+	float minDist = 0;
+	float maxDist = 999999.0f;
 
-	if (renderToRenderBuffer) {
-		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	for (int i = 0; i < MAX_POINTLIGHTS_PER_OBJECT; i++) {
+		/* Pointer to a Pointer of a PointLight */
+		for (pointlight* pppl = *pointlights; pppl != NULL;  pppl++ ) {
+			float dist = magnitude_4f(vector_sub_4f(pppl->position, position));
+			if (dist > minDist&& dist < maxDist) {
+				maxDist = dist;
+				closestPointlights[i] = *pppl;
+			}
+		}
+
+		minDist = magnitude_4f(vector_sub_4f(closestPointlights[i].position, position));
 	}
 
-	vpWidth = width;
-	vpHeight = height;
+	return closestPointlights;
 }
 
-static int glOffset, bmOffset;
-static float b, g, r, a;
-void float_image_to_char_image(int width, int height, int reverse) {
-	for (int y = 0; y < height; y++) {
-		for (int x = 0; x < width; x++) {
-			glOffset = y * width + x;
-			b = *(floatBuffer + glOffset * 4 + 0);
-			g = *(floatBuffer + glOffset * 4 + 1);
-			r = *(floatBuffer + glOffset * 4 + 2);
-			a = *(floatBuffer + glOffset * 4 + 3);
-
-			if (reverse) {
-				bmOffset = ((height - 1) - y) * width + x;
-			}
-			else {
-				bmOffset = glOffset;
-			}
-			*(lpBits + bmOffset * 4 + 0) = (unsigned char)(b * 255);
-			*(lpBits + bmOffset * 4 + 1) = (unsigned char)(g * 255);
-			*(lpBits + bmOffset * 4 + 2) = (unsigned char)(r * 255);
-			*(lpBits + bmOffset * 4 + 3) = (unsigned char)(a * 255);
+void buffer_pointlight_data(vec4f position) {
+	pointlight buffer[MAX_POINTLIGHTS_PER_OBJECT];
+	pointlight* closestPointlights = get_closest_pointlights(position);
+	
+	int numPointlights = 0;
+	for (pointlight* pppl = *pointlights; pppl != NULL;  pppl++) {
+		if (numPointlights >= MAX_POINTLIGHTS_PER_OBJECT || pppl == NULL) {
+			break;
 		}
+		
+		buffer[numPointlights] = *(closestPointlights + numPointlights);
+
+		numPointlights++;
 	}
+
+	if (numPointlights > 0) {
+		glBindBuffer(GL_UNIFORM_BUFFER, lightbo);
+		glBufferData(GL_UNIFORM_BUFFER, numPointlights * sizeof(pointlight), buffer, GL_DYNAMIC_COPY);
+	}
+
+}
+
+void resize(int width, int height) {
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+
+	bufferWidth = width;
+	bufferHeight = height;
 }
 
 void draw_skybox(mat4f perspectiveMatrix) {
@@ -192,20 +284,20 @@ float draw(int dWidth, int dHeight) {
 
 	int fps = (int)(1.0f / dt);
 
-	/* calculate universal matrices for this frame*/
+	// calculate universal matrices for this frame
 	static mat4f cameraMatrix;
 
 	cameraMatrix = from_position_and_rotation(inverse_vec3f(currentCamera.position), inverse_vec3f(currentCamera.rotation));
 	cameraMatrix = mat_mul_mat(new_identity(), cameraMatrix);
 
-	perspectiveMatrix = new_perspective(2, 10000, fov, ((float)dWidth / (float)dHeight));
+	perspectiveMatrix = new_perspective(.1, 10000, fov, ((float)dWidth / (float)dHeight));
 
-	/* draw everything else */
-	glClearColor(.5f, .5f, .5f, 0.0f);
+	// draw everything else 
+	glClearColor(.1f, .1f, .1f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	/* draw the skybox */
+	//draw the skybox 
 	draw_skybox(perspectiveMatrix, cameraMatrix);
 
 	glEnable(GL_CULL_FACE);
@@ -214,10 +306,28 @@ float draw(int dWidth, int dHeight) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	drawable_draw(&model, perspectiveMatrix, cameraMatrix, skyboxTexture);
+	int cx = 5;
+	int cy = 5;
+	float s = 2.1f;
+	for (int y = 0; y < cx; y++) {
+		for (int x = 0; x < cy; x++) {
+			model.position = (vec3f){s * (x - ((cx-1) / 2.0f)), s * (y - ((cy-1) / 2.0f)), -4.0f};
+			model.scale = (vec3f){ s / 2, s / 2, s / 2};
+			
+			model.material.color = (vec3f){ 1.0f, 0.0f, 0.0f };
+			model.material.ao = .15f;
+			model.material.metallic = min(1, y / (float)cy + .05f);
+			model.material.roughness = min(1, x / (float)cx + .05f);
 
-	SwapBuffers(glContextHDC);
-	
+			drawable_draw(&model, perspectiveMatrix, cameraMatrix, skyboxTexture);
+		}
+	}
+
+
+	if (!antialiased) {
+		SwapBuffers(glContextHDC);
+	}
+
 	return dt;
 }
 
@@ -230,46 +340,89 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight) {
 		static HDC hdcMem;
 		static HGDIOBJ hOld;
 
-		float dt = draw(dWidth, dHeight);
-
-		memset(floatBuffer, 0, 4 * vpWidth * vpHeight);
-		memset(lpBits, 0, 4 * vpWidth * vpHeight);
-		
-		if (renderToPixelbuffer) {
-			if (numDownloads < numPBOs) {
-				glBindBuffer(GL_PIXEL_PACK_BUFFER, *(pbo + dx));
-				CHECK_GL_ERRORS;
-				glReadPixels(0, 0, vpWidth, vpHeight, GL_BGRA, GL_UNSIGNED_BYTE, 0);
-				CHECK_GL_ERRORS;
-			}
-			else {
-				glBindBuffer(GL_PIXEL_PACK_BUFFER, *(pbo + dx));
-				ptr = (unsigned char*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_WRITE);
-
-				if (ptr != NULL) {
-					int nBytes = vpWidth * vpHeight * 4;
-					memcpy(lpBits, ptr, nBytes);
-					glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-					glReadPixels(0, 0, vpWidth, vpHeight, GL_BGRA, GL_UNSIGNED_BYTE, 0);
-				}
-				else {
-					CHECK_GL_ERRORS;
-				}
-			}
-
-			glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+		if (antialiased) {
+			glBindFramebuffer(GL_FRAMEBUFFER, aafbo);
+			glViewport(0, 0, dWidth * scale, dHeight * scale);
 		}
 		else {
-			glReadPixels(0, 0, vpWidth, vpHeight, GL_BGRA, GL_FLOAT, floatBuffer);
-			float_image_to_char_image(vpWidth, vpHeight, 0);
+			glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 		}
 
-		
+		float dt = draw(dWidth, dHeight);
+
+		if (antialiased) {
+			glViewport(0, 0, dWidth, dHeight);
+
+			glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+			
+			glClearColor(0, 1.0f, 0, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+			glDepthFunc(GL_ALWAYS);
+
+			glUseProgram(ssaaProg);
+
+			GLuint sLoc, swLoc, shLoc, sampLoc;
+			sLoc = glGetUniformLocation(ssaaProg, "scale");
+			swLoc = glGetUniformLocation(ssaaProg, "sWidth");
+			shLoc = glGetUniformLocation(ssaaProg, "sHeight");
+			sampLoc = glGetUniformLocation(ssaaProg, "sampleNum");
+
+			glUniform1f(sLoc, (float)scale);
+			glUniform1i(swLoc, dWidth * scale);
+			glUniform1i(shLoc, dHeight * scale);
+			glUniform1i(sampLoc, scale);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, aatex);
+
+
+			glBindVertexArray(aavao);
+
+			glBindBuffer(GL_ARRAY_BUFFER, aavbo);
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+
+			glDrawArrays(GL_QUADS, 0, 4);
+			SwapBuffers(glContextHDC);
+		}
+		CHECK_GL_ERRORS;
+
+		memset(lpBits, 0, 4 * bufferWidth * bufferHeight);
+
+		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+		if (numDownloads < numPBOs) {
+			glBindBuffer(GL_PIXEL_PACK_BUFFER, *(pbo + dx));
+			CHECK_GL_ERRORS;
+			glReadPixels(0, 0, bufferWidth, bufferHeight, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+			CHECK_GL_ERRORS;
+		}
+		else {
+			glBindBuffer(GL_PIXEL_PACK_BUFFER, *(pbo + dx));
+			ptr = (unsigned char*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_WRITE);
+
+			if (ptr != NULL) {
+				int nBytes = bufferWidth * bufferHeight * 4;
+				memcpy(lpBits, ptr, nBytes);
+				glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+				glReadPixels(0, 0, bufferWidth, bufferHeight, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+			}
+			else {
+				CHECK_GL_ERRORS;
+			}
+		}
+
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+	
+
 
 		BITMAPINFOHEADER bih = { 0 };
 		bih.biSize = sizeof(BITMAPINFOHEADER);
-		bih.biWidth = vpWidth;
-		bih.biHeight = vpHeight;
+		bih.biWidth = bufferWidth;
+		bih.biHeight = bufferHeight;
 		bih.biPlanes = 1;
 		bih.biBitCount = 32;
 		bih.biCompression = 0;
@@ -279,7 +432,6 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight) {
 		bih.biClrUsed = 0;
 		bih.biClrImportant = 0;
 		
-		///*
 		DrawDibDraw(
 			hdd, hdc,
 			0, 0,  // dest pos 
@@ -287,33 +439,17 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight) {
 			&bih,
 			lpBits,
 			0, 0, // source pos 
-			vpWidth, vpHeight, // source size
-			DDF_NOTKEYFRAME);
-		//*/
-
-		/*
-		//hbmp = CreateCompatibleBitmap(hdc, vpWidth, vpHeight);
-		hbmp = CreateBitmap(top.width, top.height, 1, 32, top.lpBits);
-		////SetBitmapBits(hbmp, ibd.height * ibd.width * 4, ibd.lpBits);
-
-		hdcMem = CreateCompatibleDC(hdc);
-		hOld = SelectObject(hdcMem, hbmp);
-		DeleteObject(hOld);
-
-
-		BitBlt(hdc, 0, 0, top.width, top.height, hdcMem, 0, 0, SRCCOPY);
-		////StretchBlt(hdc, 0, 0, dWidth, dHeight, hdcMem, 0, 0, vpWidth, vpHeight, SRCCOPY);
-
-		DeleteDC(hdcMem);
-		DeleteObject(hbmp);
-		*/
-
+			bufferWidth, bufferHeight, // source size
+			NULL);
 
 		char* text = calloc(50, sizeof(char));
-		sprintf_s(text, 50, "dt: %0.5f", dt);
-		TextOutA(hdc, 100, 20, text, strlen(text));
+		int fps = (int)(1.0f / dt);
+		sprintf_s(text, 50, "%ifps", fps);
+		SetBkMode(hdc, TRANSPARENT);
+		SetTextColor(hdc, RGB(0, 180, 0));
+		TextOutA(hdc, 0, 0, text, strlen(text));
 		free(text);
-		//*/
+
 		 
 		++dx;
 		dx = dx % numPBOs;
@@ -326,6 +462,5 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight) {
 }
 
 void end() {
-	free(floatBuffer);
 	free(lpBits);
 }

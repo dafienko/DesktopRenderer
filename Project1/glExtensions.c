@@ -76,6 +76,11 @@ void GLEInit() {
     glUnmapBuffer = (PFNGLUNMAPBUFFERPROC)getProc("glUnmapBuffer");
     glActiveTexture = (PFNGLACTIVETEXTUREPROC)getProc("glActiveTexture");
     glTexStorage2D = (PFNGLTEXSTORAGE2DPROC)getProc("glTexStorage2D");
+    glTexImage2DMultisample = (PFNGLTEXIMAGE2DMULTISAMPLEPROC)getProc("glTexImage2DMultisample");
+    glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC)getProc("glBlitFramebuffer");
+    glBlitNamedFramebuffer = (PFNGLBLITNAMEDFRAMEBUFFERPROC)getProc("glBlitNamedFramebuffer");
+    glCheckFramebufferStatus = (PFNGLCHECKFRAMEBUFFERSTATUSPROC)getProc("glCheckFramebufferStatus");
+    glGenerateMipmap = (PFNGLGENERATEMIPMAPPROC)getProc("glGenerateMipmap");
 
     initialized = 1;
 }

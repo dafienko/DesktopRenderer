@@ -1,11 +1,12 @@
 #include "assetLoader.h"
 #include "errors.h"
+#include <math.h>
 
 GLuint create_skybox_texture(const char* filename) {
-	image_bit_data ibd = read_png_file_simple("assets/skybox.png");
+	image_bit_data ibd = read_png_file_simple(filename);
 	GLuint skybox;
 
-	int skyboxFaceSize = ibd.width / 4;
+	int skyboxFaceSize = floor(ibd.width / 4);
 	glActiveTexture(GL_TEXTURE0);
 	CHECK_GL_ERRORS;
 	glGenTextures(1, &skybox);
