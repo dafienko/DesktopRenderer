@@ -13,11 +13,9 @@ typedef struct camera {
 camera currentCamera;
 
 void init(int width, int height);
-void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight);
+void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int destPosY);
 float draw(int dWidth, int dHeight);
 void end();
-
-void resize(int width, int height);
 
 void use_rc(HDC*, HGLRC*);
 
@@ -34,5 +32,8 @@ typedef struct pointlight {
 pointlight** pointlights;
 
 void buffer_pointlight_data(vec4f position);
+
+void set_fov(const float fov);
+float get_fov();
 
 #endif

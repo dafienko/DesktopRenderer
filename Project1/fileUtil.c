@@ -4,15 +4,22 @@
 
 #define MAX_LINE_WIDTH 500
 
+#define FREAD_BUFFER_SIZE 10000
+
 int get_num_lines(FILE* file) {
 	int numLines = 1;
 
-	char c;
-	while ((c = fgetc(file)) != EOF) {
-		if (c == '\n') {
-			numLines++;
+	char buffer[FREAD_BUFFER_SIZE];
+	int numRead = 0;
+	do {
+		numRead = fread(buffer, sizeof(char), FREAD_BUFFER_SIZE, file);
+
+		for (int i = 0; i < numRead; i++) {
+			if (buffer[i] == '\n') {
+				numLines++;
+			}
 		}
-	}
+	} while (numRead == FREAD_BUFFER_SIZE);
 	
 	fseek(file, 0, SEEK_SET);
 	return numLines;
@@ -36,30 +43,35 @@ lines_data get_file_lines(const char* filename) {
 	char* currentLine = calloc(MAX_LINE_WIDTH, sizeof(char));
 	int lineCharIndex = 0;
 	int lineNum = 0;
-	while (TRUE) {
-		c = fgetc(file);
-		
-		if (c != EOF) { // if not at the end of the file, add this character
+
+	char buffer[FREAD_BUFFER_SIZE];
+	int numRead = 0;
+	do {
+		memset(buffer, 0, FREAD_BUFFER_SIZE * sizeof(char));
+		numRead = fread(buffer, sizeof(char), FREAD_BUFFER_SIZE, file);
+
+		for (int i = 0; i < numRead; i++) {
+			char c = buffer[i];
+
 			*(currentLine + lineCharIndex) = c;
 			lineCharIndex++;
-		} 
 
-		if (c == '\n' || c == EOF) { // if the character is the end of a line, add this line to the lines array and reset for the next line
-			char* line = calloc(lineCharIndex + 1, sizeof(char)); // add 1 for null terminator
-			memcpy(line, currentLine, lineCharIndex); 
-			*(ld.lines + lineNum) = line;
-			*(ld.lengths + lineNum) = lineCharIndex;
+			if (c == '\n' || (numRead != FREAD_BUFFER_SIZE && i == numRead - 1)) { // if the character is the end of a line, add this line to the lines array and reset for the next line
+				if (lineCharIndex > 0) {
+					char* line = calloc(lineCharIndex + 1, sizeof(char)); // add 1 for null terminator
+					memcpy(line, currentLine, lineCharIndex);
+					*(ld.lines + lineNum) = line;
+					*(ld.lengths + lineNum) = lineCharIndex;
 
-			lineNum++;
-			lineCharIndex = 0;
+					lineNum++;
+				}
+
+				lineCharIndex = 0;
+			}
 		}
+	} while (numRead == FREAD_BUFFER_SIZE);
 
-		if (c == EOF) { // if this is the end of the file, break out of this loop
-			break;
-		}
-	}
-
-	ld.numLines = numLines;
+	ld.numLines = lineNum;
 
 	free(currentLine);
 	fclose(file);

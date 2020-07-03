@@ -8,6 +8,7 @@ SPLITSTR strsplit(const char*, const char*); // returns an array of strings by s
 void free_splitstr(SPLITSTR* s);
 
 STRIPPEDSTR lstrip(const char*); // removes all whitespace left of the first non-whitespace character in a string
+STRIPPEDSTR rstrip(const char*); // removes all whitespace right of the last non-whitespace character in a string
 void free_strippedstr(STRIPPEDSTR* s);
 
 int strfind(const char* haystack, const char* needle);

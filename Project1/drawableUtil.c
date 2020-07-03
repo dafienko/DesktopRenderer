@@ -2,47 +2,68 @@
 #include "glExtensions.h"
 #include "renderer.h"
 #include <stdio.h>
+#include "errors.h"
+
 
 drawable obj_to_drawable(obj_data* od) {
 	drawable d = { 0 };
 	d.vao = calloc(1, sizeof(GLuint));
 	d.vbo = calloc(3, sizeof(GLuint));
 
+	// copy the obj's material library
+	mtllib mlib = { 0 };
+	mlib.numMaterials = od->materials.numMaterials;
+	mlib.materials = calloc(mlib.numMaterials, sizeof(mtllib_material));
+	for (int i = 0; i < mlib.numMaterials; i++) {
+		*(mlib.materials + i) = *(od->materials.materials + i);
+	}
+	d.materials = mlib;
+	d.numMaterials = mlib.numMaterials;
+
+	// copy the obj's material-group bounds data
+	d.materialBounds = calloc(mlib.numMaterials + 1, sizeof(int));
+	memcpy(d.materialBounds, od->materialBounds, (mlib.numMaterials + 1) * sizeof(int));
+
+
 	glGenVertexArrays(1, d.vao);
+	CHECK_GL_ERRORS;
 	glBindVertexArray(*(d.vao + 0));
+	CHECK_GL_ERRORS;
 
 	glGenBuffers(3, d.vbo);
+	CHECK_GL_ERRORS;
 
 	/* buffer positions */
 	glBindBuffer(GL_ARRAY_BUFFER, *(d.vbo + 0));
-	int size = sizeof(vec3f) * od->numIndices;
+	CHECK_GL_ERRORS;
+	int size = sizeof(vec3f) * od->numUniqueIndices;
 	glBufferData(GL_ARRAY_BUFFER, size, od->positions, GL_STATIC_DRAW);
+	CHECK_GL_ERRORS;
 
 	/* buffer normals */
 	glBindBuffer(GL_ARRAY_BUFFER, *(d.vbo + 1));
-	OutputDebugStringA("Buffering normals:\n");
-	size = sizeof(vec3f) * od->numIndices;
-	for (int i = 0; i < od->numIndices; i++) {
-		vec3f n = *(od->normals + i);
-		int h = 0;
-	}
+	CHECK_GL_ERRORS;
+	size = sizeof(vec3f) * od->numUniqueIndices;
 	glBufferData(GL_ARRAY_BUFFER, size, od->normals, GL_STATIC_DRAW);
+	CHECK_GL_ERRORS;
 
 	/* buffer indices */
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *(d.vbo + 2));
-	size = sizeof(*(od->indices + 0)) * od->numFaces * 3;
+	CHECK_GL_ERRORS;
+	size = sizeof(*(od->indices + 0)) * od->numTris * 3;
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, od->indices, GL_STATIC_DRAW);
+	CHECK_GL_ERRORS;
 
-	d.numFaces = od->numFaces;
+	d.numFaces = od->numTris;
 
 	return d;
 }
 
 
-
+int timesDrawn = 0;
 void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLuint skyboxTexture) {
 	static GLuint perspectiveLoc, mvLoc, mLoc, cposLoc, scaleLoc,  /* random bullcrap */
-		maoLoc, mAlbedoLoc, mMetallicLoc, mRoughnessLoc; /* material bullcrap */
+		maLoc, mdLoc, msLoc, mshiLoc, mkLoc; /* material bullcrap */
 
 	glUseProgram(d->hProgram);
 
@@ -66,15 +87,17 @@ void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLu
 	mvLoc = glGetUniformLocation(d->hProgram, "mvMatrix");
 	cposLoc = glGetUniformLocation(d->hProgram, "cameraPos");
 	scaleLoc = glGetUniformLocation(d->hProgram, "scale");
-	maoLoc = glGetUniformLocation(d->hProgram, "m.ao");
-	mAlbedoLoc = glGetUniformLocation(d->hProgram, "m.albedo");
-	mMetallicLoc = glGetUniformLocation(d->hProgram, "m.metallic");
-	mRoughnessLoc = glGetUniformLocation(d->hProgram, "m.roughness");
-	
+
+	maLoc = glGetUniformLocation(d->hProgram, "m.ambient");
+	mdLoc = glGetUniformLocation(d->hProgram, "m.diffuse");
+	msLoc = glGetUniformLocation(d->hProgram, "m.specular");
+	mshiLoc = glGetUniformLocation(d->hProgram, "m.shininess");
+	mkLoc = glGetUniformLocation(d->hProgram, "m.k");
+
 	float* vals = get_vals_mat4f(perspectiveMatrix);
 	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, vals);
 	free(vals);
-	
+
 	mat4f mMatrix = from_position_and_rotation(d->position, d->rotation);
 	vals = get_vals_mat4f(mMatrix);
 	glUniformMatrix4fv(mLoc, 1, GL_FALSE, vals);
@@ -84,16 +107,25 @@ void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLu
 	vals = get_vals_mat4f(mvMatrix);
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, vals);
 	free(vals);
-	
+
 	glUniform3f(cposLoc, currentCamera.position.x, currentCamera.position.y, currentCamera.position.z);
 	glUniform3f(scaleLoc, d->scale.x, d->scale.y, d->scale.z);
 
-	glUniform3f(mAlbedoLoc, d->material.color.x, d->material.color.y, d->material.color.z);
-	glUniform1f(maoLoc, d->material.ao);
-	glUniform1f(mMetallicLoc, d->material.metallic);
-	glUniform1f(mRoughnessLoc, d->material.roughness);
-
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *(d->vbo + 2));
 
-	glDrawElements(GL_TRIANGLES, d->numFaces * 3, GL_UNSIGNED_INT, NULL);
+	for (int i = 0; i < d->numMaterials; i++) {
+		int indexFloor = *(d->materialBounds + i);
+		int indexCeil = *(d->materialBounds + i + 1);
+		int groupNumIndices = indexCeil - indexFloor;
+
+		mtllib_material mtl = *(d->materials.materials + i);
+
+		glUniform3f(maLoc, mtl.material.ambient.x, mtl.material.ambient.y, mtl.material.ambient.z);
+		glUniform3f(mdLoc, mtl.material.diffuse.x, mtl.material.diffuse.y, mtl.material.diffuse.z);
+		glUniform3f(msLoc, mtl.material.specular.x, mtl.material.specular.y, mtl.material.specular.z);
+		glUniform1f(mshiLoc, 32);
+		glUniform1f(mkLoc, .9f);
+
+		glDrawRangeElements(GL_TRIANGLES, indexFloor, indexCeil, groupNumIndices, GL_UNSIGNED_INT, indexFloor * sizeof(int));
+	}
 }

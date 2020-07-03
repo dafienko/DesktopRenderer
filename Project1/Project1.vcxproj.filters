@@ -207,6 +207,9 @@
     <ClCompile Include="skyboxLoader.c">
       <Filter>Source Files\assetLoader</Filter>
     </ClCompile>
+    <ClCompile Include="mtllibLoader.c">
+      <Filter>Source Files\assetLoader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="winUtil.h">

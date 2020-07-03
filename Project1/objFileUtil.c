@@ -4,29 +4,84 @@
 #include "stringUtil.h"
 #include <string.h>
 #include "vectorMath.h"
+#include "errors.h"
 
-void print_vec4i(vec4i v) {
-	char* s1 = calloc(60, sizeof(char));
-	sprintf_s(s1, 60, "(%i, %i, %i, %i)\n", v.x, v.y, v.z, v.w);
-	OutputDebugStringA(s1);
-	free(s1);
+int get_material_index(mtllib* mlib, const char* materialName) {
+	for (int i = 0; i < mlib->numMaterials; i++) {
+		char* thisMtlName = (mlib->materials + i)->materialName;
+		if (strcmp(materialName, thisMtlName) == 0) {
+			return i;
+		}
+	}
+
+	return 0;
 }
 
-void print_vec3f(vec3f v) {
-	char* s1 = calloc(160, sizeof(char));
-	sprintf_s(s1, 160, "(%0.3f, %0.3f, %0.3f)\n", v.x, v.y, v.z);
-	OutputDebugStringA(s1);
-	free(s1);
+/* for debugging file loading */
+void print_obj_data(obj_data od) {
+	int bufferSize = 500;
+	char* buffer = calloc(bufferSize, sizeof(char));
+	for (int i = 0; i < od.numUniqueIndices; i++) {
+		memset(buffer, 0, bufferSize * sizeof(char));
+		vec3f v = *(od.positions + i);
+		vec3f n = *(od.normals + i);
+		sprintf_s(buffer, bufferSize * sizeof(char), "%i: \tv: (%0.2f, %0.2f, %0.2f)       n: (%0.2f, %0.2f, %0.2f)\n", i, v.x, v.y, v.z, n.x, n.y, n.z);
+		OutputDebugStringA(buffer);
+	}
+
+	OutputDebugStringA("\n");
+
+	for (int i = 0; i < od.numMaterials; i++) {
+		memset(buffer, 0, bufferSize * sizeof(char));
+		int materialFloor = *(od.materialBounds + i);
+		int materialCeil = *(od.materialBounds + i + 1);
+
+		sprintf_s(buffer, bufferSize * sizeof(char), "\nmaterial %i (%i-%i):\n", i, materialFloor, materialCeil);
+		OutputDebugStringA(buffer);
+
+		for (int j = materialFloor / 3; j < materialCeil / 3; j++) {
+			memset(buffer, 0, bufferSize * sizeof(char));
+			int a = *(od.indices + j * 3 + 0);
+			int b = *(od.indices + j * 3 + 1);
+			int c = *(od.indices + j * 3 + 2);
+			sprintf_s(buffer, bufferSize * sizeof(char), "\t%i %i %i\n", a, b, c);
+			OutputDebugStringA(buffer);
+		}
+	}
+
+	OutputDebugStringA("\n");
+
+	free(buffer);
 }
 
-vec4i get_face_indices(const char* faceComponent) {
+vec3f parse_vertex_position(SPLITSTR components) {
+	vec3f v = { 0 };
+
+	v.x = atof(*(components + 1));
+	v.y = atof(*(components + 2));
+	v.z = atof(*(components + 3));
+
+	return v;
+}
+
+vec3f parse_vertex_normal(SPLITSTR components) {
+	vec3f n = { 0 };
+
+	n.x = atof(*(components + 1));
+	n.y = atof(*(components + 2));
+	n.z = atof(*(components + 3));
+
+	return n;
+}
+
+vec4i parse_index_group(const char* faceComponent) {
 	vec4i indices = { 0 };
 
 	int numSubComponents = strfind(faceComponent, "/");
 	SPLITSTR subComponents = strsplit(faceComponent, "/");
 
 	indices.x = atoi(*(subComponents + 0)) - 1; // obj file indices start at 0, c arrays start at 0 so subtract 1 from obj index
-	
+
 	// only vertex index is guaranteed, texture/normal indices are optional
 	if (numSubComponents >= 1) {
 		indices.y = atoi(*(subComponents + 1)) - 1;
@@ -42,205 +97,275 @@ vec4i get_face_indices(const char* faceComponent) {
 	return indices;
 }
 
-obj_data get_obj_data(const char* filename) {
+obj_data read_obj_file(const char* filename, const char* mtlFilename) {
+	mtllib mlib = { 0 };
+	mlib.numMaterials = 1;
+	if (mtlFilename) {
+		mlib = read_mtl_file(mtlFilename);
+	}
+	else {
+		mlib.materials = calloc(1, sizeof(mtllib_material));
+		mlib.materials->materialName = calloc(1, sizeof(char));
+		mlib.materials->material.ambient = (vec3f){.1f, .1f, .1f};
+		mlib.materials->material.diffuse = (vec3f){ 0, 0, 1 };
+		mlib.materials->material.specular = (vec3f){ .6, .6, 1 };
+	}
+
 	lines_data ld = get_file_lines(filename);
-	obj_data od = { 0 };
+
+	int numPositions = 0;
+	int numPositionsSpace = 100;
+	vec3f* positions = calloc(numPositionsSpace, sizeof(vec3f));
 
 	int numNormals = 0;
-	int numVertices = 0;
-	int numFaces = 0;
+	int numNormalsSpace = 100;
+	vec3f* normals = calloc(numNormalsSpace, sizeof(vec3f));
+
+	int numIndexGroups = 0;
+	int numIndexGroupsSpace = 100;
+	vec4i* indexGroups = calloc(numIndexGroupsSpace, sizeof(vec4i));
+
+	int numGroupBounds = 1;
+	int numGroupBoundsSpace = 2;
+	vec4i* groupBounds = calloc(numGroupBoundsSpace, sizeof(vec4i)); // x = position bound, y = tex coord bound, z = normal bound, w = indexGroup bound
+	*(groupBounds + 0) = (vec4i){0, 0, 0, 0}; /* the first object "group's" indices will always start at 0p, 0tc, 0n, 0igb */
+
+	int numMaterialGroupBounds = 1;
+	int numMaterialGroupBoundsSpace = 2;
+	vec2i* materialGroupBounds = calloc(numMaterialGroupBoundsSpace, sizeof(vec2i));
+	*(materialGroupBounds + 0) = (vec2i){0, 0};
+
+	int vertexIndex = 0; // current vertex/normal position into corresponding raw obj storage buffer
+	int normalIndex = 0;
+	int indexGroupIndex = 0;
 	for (int i = 0; i < ld.numLines; i++) {
 		char* line = *(ld.lines + i);
-		STRIPPEDSTR lstrippedLine = lstrip(line);
-		SPLITSTR components = strsplit(lstrippedLine, " ");
+		STRIPPEDSTR lstripped = lstrip(line);
+		STRIPPEDSTR rstripped = rstrip(lstripped);
+		SPLITSTR components = strsplit(rstripped, " ");
 
-		if (strcmp(*(components + 0), "v") == 0) {
-			numVertices++;
+		char* firstToken = *(components + 0);
+		if (strcmp(firstToken, "v") == 0) {
+			if (numPositions + 1 >= numPositionsSpace) {
+				numPositionsSpace *= 2;
+				positions = realloc(positions, numPositionsSpace * sizeof(vec3f));
+			}
+
+			vec3f v = parse_vertex_position(components);
+			*(positions + numPositions) = v;
+
+			numPositions++;
 		}
-		else if (strcmp(*(components + 0), "vn") == 0) {
+		else if (strcmp(firstToken, "vn") == 0) {
+			if (numNormals + 1 >= numNormalsSpace) {
+				numNormalsSpace *= 2;
+				normals = realloc(normals, numNormalsSpace * sizeof(vec3f));
+			}
+
+			vec3f n = parse_vertex_normal(components);
+			*(normals + numNormals) = n;
+
 			numNormals++;
 		}
-		else if (strcmp(*(components + 0), "f") == 0) {
-			if (strfind(lstrippedLine, " ") > 3) {
-				numFaces += 2;
+		else if (strcmp(firstToken, "f") == 0) {
+			int numSplits = strfind(rstripped, " "); // useful for determining if this face is just one tri or a quad. (Obj spec doesn't mandate tris-only)
+			int thisNumIndexGroups = (numSplits == 3 ? 3 : 6);
+
+			if (numIndexGroups + thisNumIndexGroups + 1 >= numIndexGroupsSpace) {
+				numIndexGroupsSpace *= 2;
+				indexGroups = realloc(indexGroups, numIndexGroupsSpace * sizeof(vec4i));
 			}
-			else {
-				numFaces++;
-			}
-		}
 
-		free_strippedstr(&lstrippedLine);
-		free_splitstr(&components);
-	}
-
-	vec4i* rawIndices = calloc(numFaces * 3, sizeof(vec4i)); // 3 vec3i's per face-- each vec3i has one vertex index and each face has 3 vertices
-	vec3f* rawVertices = calloc(numVertices, sizeof(vec3f));
-	vec3f* rawNormals = calloc(numNormals, sizeof(vec3f));
-	
-	int normalIndex = 0;
-	int vertexIndex = 0;
-	int indexIndex = 0;
-	for (int i = 0; i < ld.numLines; i++) {
-		char* line = *(ld.lines + i);
-		STRIPPEDSTR lstrippedLine = lstrip(line);
-		SPLITSTR components = strsplit(lstrippedLine, " ");
-
-		if (strcmp(*(components + 0), "v") == 0) {
-			vec3f v = { 0 };
-			
-			v.x = (float)atof(*(components + 1));
-			v.y = (float)atof(*(components + 2));
-			v.z = (float)atof(*(components + 3));
-
-			*(rawVertices + vertexIndex) = v;
-
-			vertexIndex++;
-		}
-		else if ((strcmp(*(components + 0), "vn")) == 0) {
-			vec3f n = { 0 };
-
-			n.x = (float)atof(*(components + 1));
-			n.y = (float)atof(*(components + 2));
-			n.z = (float)atof(*(components + 3));
-
-			*(rawNormals + normalIndex) = n;
-
-			normalIndex++;
-		}
-		else if (strcmp(*(components + 0), "f") == 0) {
-			int numSplits = strfind(lstrippedLine, " ");
 			vec4i* indexComponents = calloc(numSplits, sizeof(vec4i));
 			for (int j = 1; j < numSplits + 1; j++) {
-				*(indexComponents + j - 1) = get_face_indices(*(components + j));
+				*(indexComponents + j - 1) = parse_index_group(*(components + j));
 			}
-			 
-			if (numSplits == 3) {
-				*(rawIndices + indexIndex) = *(indexComponents + 0);
-				indexIndex++;
 
-				*(rawIndices + indexIndex) = *(indexComponents + 1);
-				indexIndex++;
-
-				*(rawIndices + indexIndex) = *(indexComponents + 2);
-				indexIndex++;
+			for (int i = 0; i < 3; i++) { // regardless of whether or not this face is a tri, the first three index groups will be one trie
+				*(indexGroups + numIndexGroups) = *(indexComponents + i);
+				numIndexGroups++;
 			}
-			else {
-				*(rawIndices + indexIndex) = *(indexComponents + 0);
-				indexIndex++;
+			if (numSplits != 3) { // if this face is a quad, add second tri to finish the quad
+				*(indexGroups + numIndexGroups) = *(indexComponents + 2);
+				numIndexGroups++;
 
-				*(rawIndices + indexIndex) = *(indexComponents + 1);
-				indexIndex++;
+				*(indexGroups + numIndexGroups) = *(indexComponents + 3);
+				numIndexGroups++;
 
-				*(rawIndices + indexIndex) = *(indexComponents + 2);
-				indexIndex++;
-
-				*(rawIndices + indexIndex) = *(indexComponents + 2);
-				indexIndex++;
-
-				*(rawIndices + indexIndex) = *(indexComponents + 3);
-				indexIndex++;
-
-				*(rawIndices + indexIndex) = *(indexComponents + 0);
-				indexIndex++;
+				*(indexGroups + numIndexGroups) = *(indexComponents + 0);
+				numIndexGroups++;
 			}
 		}
 
-		free_strippedstr(&lstrippedLine);
+		if (strcmp(firstToken, "g") == 0 || i == ld.numLines - 1) { // we're starting a new group or on the last line (which means we're ending the last group)
+			if (numGroupBounds + 1 >= numGroupBoundsSpace) {
+				numGroupBoundsSpace *= 2;
+				groupBounds = realloc(groupBounds, numGroupBoundsSpace * sizeof(vec4i));
+			}
+
+			vec4i thisGroupBound = (vec4i){numPositions, 0, numNormals, numIndexGroups};
+			*(groupBounds + numGroupBounds) = thisGroupBound;
+			numGroupBounds++;
+		} 
+
+		if (strcmp(firstToken, "usemtl") == 0 || i == ld.numLines - 1) { // we're using a new material or on the last line (which means we're ending the last material)
+			if (numMaterialGroupBounds + 1 >= numMaterialGroupBoundsSpace) {
+				numMaterialGroupBoundsSpace *= 2;
+				materialGroupBounds = realloc(materialGroupBounds, numMaterialGroupBoundsSpace * sizeof(vec2i));
+			}
+
+			int materialIndex = 0;
+			if (mtlFilename) {
+				char* materialName = *(components + 1);
+				if (materialName != NULL) {
+					materialIndex = get_material_index(&mlib, *(components + 1));
+				}
+			}
+			vec2i thisMaterialGroupBound = (vec2i){materialIndex, numIndexGroups};
+			*(materialGroupBounds + numMaterialGroupBounds) = thisMaterialGroupBound;
+			numMaterialGroupBounds++;
+		}
+
 		free_splitstr(&components);
+		free_strippedstr(&lstripped);
+		free_strippedstr(&rstripped);
 	}
 
-	/* 
-	obj indices are different than opengl indices. 
+	materialGroupBounds = realloc(materialGroupBounds, numMaterialGroupBounds * sizeof(vec2i));
+	groupBounds = realloc(groupBounds, numGroupBounds * sizeof(vec4i));
+	indexGroups = realloc(indexGroups, numIndexGroups * sizeof(vec4i));
+	positions = realloc(positions, numPositions * sizeof(vec3f));
+	normals = realloc(normals, numNormals * sizeof(vec3f));
+
+	int numIndicesUsed = 0;
+	int numIndicesSpace = 100;
+	vec3f* positionsFiltered = calloc(numIndicesSpace, sizeof(vec3f));
+	vec3f* normalsFiltered = calloc(numIndicesSpace, sizeof(vec3f));
 	
-	opengl only has one index group that must correspond to every other vertex buffer data: normals, positions, etc.
 
-	obj files have 3 index "buffers", one for normals, one for positions, and one for texture positions.
+	int* materialGroupNumIndices = calloc(mlib.numMaterials, sizeof(int));
+	memset(materialGroupNumIndices, 0, mlib.numMaterials * sizeof(int));
+	int initialSpace = 100;
+	int* materialGroupSpace = calloc(mlib.numMaterials, sizeof(int));
+	int** materialGroups = calloc(mlib.numMaterials, sizeof(int*));
+	for (int i = 0; i < mlib.numMaterials; i++) {
+		*(materialGroupSpace + i) = initialSpace;
+		*(materialGroups + i) = calloc(*(materialGroupSpace + i), sizeof(int));
+	}
 
-	the next several lines combine all three index buffers so there are no duplicate vertex "groups" and only one index buffer.
-	*/
-	(rawIndices + 0)->w = 0; 
-	int uniqueIndices = 1;
-	for (int i = 1; i < numFaces * 3; i++) {
-		vec4i indexGroup = *(rawIndices + i);
+	int numUniqueIndices = -1;
+	for (int i = 0; i < numGroupBounds - 1; i++) {
+		vec4i groupFloorBound = *(groupBounds + i);
+		vec4i groupCeilBound = *(groupBounds + i + 1);
+		
+		int currentMaterialIndex = 0;
+		if (mtlFilename) {
+			for (int i = 0; i < numMaterialGroupBounds; i++) {
+				vec2i mgroupBound = *(materialGroupBounds + i);
+				
+				if (mgroupBound.y >= groupCeilBound.w) {
+					break;
+				}
 
-		int foundMatch = 0;
-		/* look for a clone of this index group */
-		for (int j = 0; j < i; j++) {
-			vec4i thisIndexGroup = *(rawIndices + j);
+				currentMaterialIndex = mgroupBound.x;
+			}
+		}
+
+		for (int j = groupFloorBound.w; j < groupCeilBound.w; j++) {
+			vec4i thisIndexGroup = *(indexGroups + j); // the w of each index group stores the unique opengl buffer index for that index group
+			int uniqueIndex = -1;
+			for (int k = j - 1; k >= groupFloorBound.w; k--) {
+				vec4i prevIndexGroup = *(indexGroups + k);
+				if (thisIndexGroup.x == prevIndexGroup.x && thisIndexGroup.y == prevIndexGroup.y && thisIndexGroup.z == prevIndexGroup.z) {
+					uniqueIndex = prevIndexGroup.w;
+					break;
+				}
+			}
+
+			if (uniqueIndex == -1) { // the current index group has no match in all previous index groups-- add to p/tc/n buffer
+				uniqueIndex = ++numUniqueIndices;
+
+				if (uniqueIndex >= numIndicesSpace) {
+					numIndicesSpace *= 2;
+
+					positionsFiltered = realloc(positionsFiltered, numIndicesSpace * sizeof(vec3f));
+					normalsFiltered = realloc(normalsFiltered, numIndicesSpace * sizeof(vec3f));
+				}
+
+				*(positionsFiltered + uniqueIndex) = *(positions + thisIndexGroup.x);
+				*(normalsFiltered + uniqueIndex) = *(normals + thisIndexGroup.z);
+			}
+			(indexGroups + j)->w = uniqueIndex;
+
+			if (currentMaterialIndex >= mlib.numMaterials) {
+				int x = 0;
+			}
+			if (*(materialGroupNumIndices + currentMaterialIndex) + 1 >= *(materialGroupSpace + currentMaterialIndex)) {
+				*(materialGroupSpace + currentMaterialIndex) *= 2;
+				*(materialGroups + currentMaterialIndex) = realloc(*(materialGroups + currentMaterialIndex), *(materialGroupSpace + currentMaterialIndex) * sizeof(int));
+			}
+
+			int* materialGroupIndexBuffer = *(materialGroups + currentMaterialIndex);
+			*(materialGroupIndexBuffer + *(materialGroupNumIndices + currentMaterialIndex)) = uniqueIndex;
+			*(materialGroupNumIndices + currentMaterialIndex) += 1;
 			
-			/* if one exists, use it's opengl-compatible index */
-			if (indexGroup.x == thisIndexGroup.x && indexGroup.y == thisIndexGroup.y && indexGroup.z == thisIndexGroup.z) {
-				foundMatch = 1;
-				(rawIndices + i)->w = thisIndexGroup.w;
-				break;
-			}
-		}
-
-		if (!foundMatch) {
-			(rawIndices + i)->w = uniqueIndices;
-
-			uniqueIndices++;
 		}
 	}
+	free(materialGroupSpace);
+	free(positions);
+	free(normals);
+	free(indexGroups);
+	free(groupBounds);
+	free(materialGroupBounds);
 
-	/* 
-	by this point, the w component of each raw index group contains the opengl-compatible index.
-
-	now we need to make the actual normal/texture/position buffers that those opengl-compatible indices point to
-	*/
-	int* indices = calloc(numFaces * 3, sizeof(int)); // 3 indices per face
-	vec3f* vertices = calloc(uniqueIndices, sizeof(vec3f));
-	vec3f* normals = calloc(uniqueIndices, sizeof(vec3f));
-
-	for (int i = 0; i < uniqueIndices; i++) {
-		for (int j = 0; j < numFaces * 3; j++) {
-			vec4i indexGroup = *(rawIndices + j);
-
-			if (indexGroup.w == i) { /* find the matching opengl-compatible index and assign its corresponding pos/norm values */
-				*(vertices + i) = *(rawVertices + indexGroup.x);
-				/* texture coords would be the y value of indexGroup */
-				*(normals + i) = *(rawNormals + indexGroup.z);
-
-				break;
-			}
-		}
+	/* calculate the total index buffer size and save the material group index bounds */
+	int totalBufferSize = 0;
+	int* materialIndexBounds = calloc(mlib.numMaterials + 1, sizeof(int));
+	*(materialIndexBounds + 0) = 0;
+	for (int i = 0; i < mlib.numMaterials; i++) {
+		int thisBufferSize = *(materialGroupNumIndices + i);
+		totalBufferSize += thisBufferSize;
+		*(materialGroups + i) = realloc(*(materialGroups + i), thisBufferSize * sizeof(int)); // shrinkwrap the individual material index-buffers
+		*(materialIndexBounds + i + 1) = totalBufferSize;
 	}
+	
+	/* combine each material group's indices into one index buffer */
+	int numFaceComponents = 0;
+	int* indices = calloc(totalBufferSize, sizeof(int));
+	for (int i = 0; i < mlib.numMaterials; i++) {
+		int* materialGroupIndexBuffer = *(materialGroups + i);
+		int numIndices = *(materialGroupNumIndices + i);
+		
+		memcpy(indices + numFaceComponents, materialGroupIndexBuffer, numIndices * sizeof(int));
 
-	for (int i = 0; i < numFaces * 3; i++) {
-		vec4i indexGroup = *(rawIndices + i);
-
-		*(indices + i) = indexGroup.w;
+		numFaceComponents += numIndices;
+		free(materialGroupIndexBuffer);
 	}
+	free(materialGroups);
+	free(materialGroupNumIndices);
 
-	free(rawVertices);
-	free(rawNormals);
-	free(rawIndices);
+	indices = realloc(indices, numFaceComponents * sizeof(int));
+	positionsFiltered = realloc(positionsFiltered, (numUniqueIndices+1) * sizeof(vec3f));
+	normalsFiltered = realloc(normalsFiltered, (numUniqueIndices+1) * sizeof(vec3f));
 
+	obj_data od = { 0 };
+	od.numTris = numIndexGroups / 3;
+	od.numMaterials = mlib.numMaterials;
+	od.numUniqueIndices = numUniqueIndices + 1;
+
+	od.materialBounds = materialIndexBounds;
 	od.indices = indices;
-	od.normals = normals;
-	od.positions = vertices;
-	od.numFaces = numFaces;
-	od.numIndices = uniqueIndices;
-
-	for (int i = 0; i < od.numFaces; i++) {
-		int faceIndex = i * 3;
-
-		int i1 = *(od.indices + faceIndex + 0);
-		int i2 = *(od.indices + faceIndex + 1);
-		int i3 = *(od.indices + faceIndex + 2);
-
-		vec3f v1 = *(od.positions + i1);
-		vec3f v2 = *(od.positions + i2);
-		vec3f v3 = *(od.positions + i3);
-
-		int b = 2;
-	}
+	od.positions = positionsFiltered;
+	od.normals = normalsFiltered;
+	od.materials = mlib;
 
 	return od;
 }
 
 void free_obj_data(obj_data* od) {
+	free(od->materialBounds);
 	free(od->indices);
-	free(od->normals);
 	free(od->positions);
+	free(od->normals);
+	free_mtllib_data(&od->materials);
 }

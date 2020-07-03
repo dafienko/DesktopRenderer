@@ -56,12 +56,22 @@ pointlight pl = { 0 };
 int antialiased = 1;
 int scale = 2;
 
+float fov = 70.0f;
+
+void set_fov(const float newFov) {
+	fov = newFov;
+}
+
+float get_fov() {
+	return fov;
+}
+
 void init(int width, int height) {
 	int sampleSize = 2; // samples per pixel is sampleSize^2
 
 
-	GLuint vs = create_vertex_shader("shaders\\brdf.vs");
-	GLuint fs = create_fragment_shader("shaders\\brdf.fs");
+	GLuint vs = create_vertex_shader("shaders\\basic.vs");
+	GLuint fs = create_fragment_shader("shaders\\basic.fs");
 	GLuint shaders[] = { vs, fs };
 	prog = create_program(shaders, 2);
 
@@ -80,21 +90,21 @@ void init(int width, int height) {
 	GLuint shaders2[] = { sbvs, sbfs };
 	skyboxProg = create_program(shaders2, 2);
 	
-	obj_data cubeObj= get_obj_data("models\\cube.obj");
-	skybox = obj_to_drawable(&cubeObj);
+
+	obj_data od = read_obj_file("models\\cube.obj", NULL);
+	skybox = obj_to_drawable(&od);
+	free_obj_data(&od);
 	skybox.hProgram = skyboxProg;
 	skybox.scale = (vec3f){ 10.0f, 10.0f, 10.0f };
 	skybox.position = (vec3f){ 0, 0, 0 };
 	skybox.rotation = (vec3f){ 0, 0, 0 };
-	free_obj_data(&cubeObj);
 
-	obj_data modelObj = get_obj_data("models\\sphere.obj");
-	model = obj_to_drawable(&modelObj);
+	od = read_obj_file("models\\small_complex_world.obj", "models\\small_complex_world.mtl");
+	model = obj_to_drawable(&od);
+	free_obj_data(&od);
 	model.hProgram = prog;
-	model.scale = (vec3f){ 2.0f, 2.0f, 2.0f };
-	model.position = (vec3f){ 0, 0, -4.0f };
-	model.rotation = (vec3f){ 0, 0, 0 };
-	free_obj_data(&modelObj);
+	model.scale = (vec3f){ .1, .1, .1 };
+
 
 	timer_start(&t);
 
@@ -253,14 +263,6 @@ void buffer_pointlight_data(vec4f position) {
 
 }
 
-void resize(int width, int height) {
-	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-
-	bufferWidth = width;
-	bufferHeight = height;
-}
-
 void draw_skybox(mat4f perspectiveMatrix) {
 	glDisable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
@@ -275,8 +277,6 @@ void draw_skybox(mat4f perspectiveMatrix) {
 
 	drawable_draw(&skybox, perspectiveMatrix, cameraMatrix, skyboxTexture);
 }
-
-float fov = 50.0f;
 
 float draw(int dWidth, int dHeight) {
 	float dt = timer_reset(&t);
@@ -306,24 +306,8 @@ float draw(int dWidth, int dHeight) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	int cx = 5;
-	int cy = 5;
-	float s = 2.1f;
-	for (int y = 0; y < cx; y++) {
-		for (int x = 0; x < cy; x++) {
-			model.position = (vec3f){s * (x - ((cx-1) / 2.0f)), s * (y - ((cy-1) / 2.0f)), -4.0f};
-			model.scale = (vec3f){ s / 2, s / 2, s / 2};
-			
-			model.material.color = (vec3f){ 1.0f, 0.0f, 0.0f };
-			model.material.ao = .15f;
-			model.material.metallic = min(1, y / (float)cy + .05f);
-			model.material.roughness = min(1, x / (float)cx + .05f);
-
-			drawable_draw(&model, perspectiveMatrix, cameraMatrix, skyboxTexture);
-		}
-	}
-
-
+	drawable_draw(&model, perspectiveMatrix, cameraMatrix, skyboxTexture);
+	CHECK_GL_ERRORS;
 	if (!antialiased) {
 		SwapBuffers(glContextHDC);
 	}
@@ -334,7 +318,7 @@ float draw(int dWidth, int dHeight) {
 unsigned int numDownloads = 0;
 int dx = 0;
 unsigned char* ptr;
-void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight) {
+void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int destPosY) {
 	if (initialized) {
 		static HBITMAP hbmp;
 		static HDC hdcMem;
@@ -348,7 +332,7 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight) {
 			glBindRenderbuffer(GL_RENDERBUFFER, rbo);
 			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 		}
-
+		CHECK_GL_ERRORS;
 		float dt = draw(dWidth, dHeight);
 
 		if (antialiased) {
@@ -434,22 +418,13 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight) {
 		
 		DrawDibDraw(
 			hdd, hdc,
-			0, 0,  // dest pos 
+			destPosX, destPosY,  // dest pos 
 			dWidth, dHeight, // dest size 
 			&bih,
 			lpBits,
 			0, 0, // source pos 
 			bufferWidth, bufferHeight, // source size
 			NULL);
-
-		char* text = calloc(50, sizeof(char));
-		int fps = (int)(1.0f / dt);
-		sprintf_s(text, 50, "%ifps", fps);
-		SetBkMode(hdc, TRANSPARENT);
-		SetTextColor(hdc, RGB(0, 180, 0));
-		TextOutA(hdc, 0, 0, text, strlen(text));
-		free(text);
-
 		 
 		++dx;
 		dx = dx % numPBOs;

@@ -5,6 +5,7 @@
 #include "program.h"
 #include "assetLoader.h"
 #include <Vfw.h>
+#include "timer.h"
 
 #pragma comment(lib, "Vfw32.lib")
 
@@ -14,9 +15,10 @@ HBITMAP hbmp;
 HDC painterDC;
 HWND hMainWnd, hOpenglWnd; 
 
-HDRAWDIB hdd;
+#define RENDER_TO_WINDOW 0
 
-int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
+HDRAWDIB hdd;
+int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
 	WNDCLASS wndClass = { 0 };
 	wndClass.style = CS_OWNDC;
 	wndClass.lpfnWndProc = mainWndProc;
@@ -38,8 +40,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
 	int sWidth = GetSystemMetrics(SM_CXSCREEN);
 	int sHeight = GetSystemMetrics(SM_CYSCREEN);
 
-	vec2i wndSize = (vec2i){ vWidth / scale, vHeight / scale };
-	//wndSize = (vec2i){ 800, 600 };
+	vec2i wndSize = (vec2i){ sWidth / scale, sHeight / scale };
+	if (RENDER_TO_WINDOW) {
+		wndSize = (vec2i){ 800, 600 };
+	}
 	
 
 	hMainWnd = create_independent_window(L"Main Window", &wndSize, NULL, &wndClass);
@@ -57,14 +61,14 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
 	
 	init(wndSize.x, wndSize.y);
 
-	resize(wndSize.x, wndSize.y);
-	//ShowWindow(hMainWnd, nShowCmd);
-	//ShowWindow(hOpenglWnd, nShowCmd);
+	if (RENDER_TO_WINDOW) {
+		ShowWindow(hMainWnd, nShowCmd);
+	}
 
 
 	hdd = DrawDibOpen();
 	if (hdd == NULL) {
-		error("Couldn't init an hdrawdib");
+		error("Couldn't init a drawdib");
 	}
 	
 
@@ -88,6 +92,10 @@ int run_message_loop() {
 	HDC hdc;
 	RECT rect;
 
+	unsigned long last = get_current_ms();
+	int numFrames = 0;
+	int lastFPS = 0;
+
 	while (TRUE) {
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
@@ -98,16 +106,37 @@ int run_message_loop() {
 			}
 		}
 
-		///*
-		hdc = GetDC(hMainWnd);
-		GetWindowRect(hMainWnd, &rect);
-		int w = rect.right - rect.left;
-		int h = rect.bottom - rect.top;
-		//display(hdd, hdc, w, h);
-		ReleaseDC(hMainWnd, hdc);
-		//*/
+		
+		if (RENDER_TO_WINDOW) {
+			hdc = GetDC(hMainWnd);
+			GetWindowRect(hMainWnd, &rect);
+			int w = rect.right - rect.left;
+			int h = rect.bottom - rect.top;
 
-		paintDesktop();
+			display(hdd, hdc, w, h, 0, 0);
+
+			char* text = calloc(50, sizeof(char));
+			sprintf_s(text, 50, "%ifps", lastFPS);
+			SetBkMode(hdc, TRANSPARENT);
+			SetTextColor(hdc, RGB(0, 180, 0));
+			TextOutA(hdc, 0, 0, text, strlen(text));
+			free(text);
+
+			ReleaseDC(hMainWnd, hdc);
+		}
+		else {
+			paintDesktop();
+		}
+		numFrames++;
+
+		unsigned long now = get_current_ms();
+		int diff = now - last;
+		if (diff >= 1000) {
+			lastFPS = numFrames;
+
+			numFrames = 0;
+			last = now;
+		}	
 	}
 }
 
@@ -138,14 +167,13 @@ WNDPROC mainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void on_paint_desktop(HDC desktopHDC) {
-	///*
+
 	int vWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
 	int vHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-	//*/
-	/*
-	int vWidth = GetSystemMetrics(SM_CXSCREEN);
-	int vHeight = GetSystemMetrics(SM_CYSCREEN);
-	*/
 
-	display(hdd, desktopHDC, vWidth, vHeight);
+	int sWidth = GetSystemMetrics(SM_CXSCREEN);
+	int sHeight = GetSystemMetrics(SM_CYSCREEN);
+	
+	display(hdd, desktopHDC, sWidth, sHeight, 0, 0);
+	display(hdd, desktopHDC, sWidth, sHeight, sWidth, 0);
 }

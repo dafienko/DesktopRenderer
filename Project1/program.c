@@ -96,6 +96,13 @@ void onFrame(float dt) {
         currentCamera.rotation.y += dt * sensitivity * 10;
     }
 
+
+    if (isKeyDown(VK_ADD)) {
+        set_fov(get_fov() + dt * 10);
+    }
+    else if (isKeyDown(VK_SUBTRACT)) {
+        set_fov(get_fov() - dt * 10);
+    }
 }
 
 void programClose() {

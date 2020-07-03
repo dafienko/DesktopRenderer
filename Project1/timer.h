@@ -8,5 +8,6 @@ typedef struct {
 void timer_start(timer* t);
 float timer_peek(timer* t);
 float timer_reset(timer* t);
+unsigned long get_current_ms();
 
 #endif

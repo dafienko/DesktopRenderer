@@ -81,6 +81,7 @@ void GLEInit() {
     glBlitNamedFramebuffer = (PFNGLBLITNAMEDFRAMEBUFFERPROC)getProc("glBlitNamedFramebuffer");
     glCheckFramebufferStatus = (PFNGLCHECKFRAMEBUFFERSTATUSPROC)getProc("glCheckFramebufferStatus");
     glGenerateMipmap = (PFNGLGENERATEMIPMAPPROC)getProc("glGenerateMipmap");
+    glDrawRangeElements = (PFNGLDRAWRANGEELEMENTSPROC)getProc("glDrawRangeElements");
 
     initialized = 1;
 }

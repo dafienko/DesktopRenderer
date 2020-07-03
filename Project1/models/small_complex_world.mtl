@@ -1,0 +1,304 @@
+newmtl Wedge1825Mtl
+Material Color
+Ka 0 0.0103978 0.116576
+Kd 0 0.0103978 0.116576
+Ks 0 0.0041999 0.0470875 
+
+d 1
+
+Ns 0
+
+newmtl Rock1fidelity1Mtl
+Material Color
+Ka 0.103634 0.108711 0.14198
+Kd 0.103634 0.108711 0.14198
+Ks 0.0418601 0.0439108 0.0573489 
+
+d 1
+
+Ns 0
+
+newmtl Spawnlocation1Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.0234425 0.0231273 0.02408 
+
+d 1
+
+Ns 0
+
+newmtl Spawnlocation2Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.0627451 0.0627451 0.0627451 
+
+d 1
+
+Ns 0
+
+map_Ka Spawnlocation2Tex.png
+map_Kd Spawnlocation2Tex.png
+map_d Spawnlocation2Tex.png
+
+newmtl Part7Mtl
+Material Color
+Ka 0.940601 0.701169 0.154152
+Kd 0.940601 0.701169 0.154152
+Ks 0.0627067 0.0467446 0.0102768 
+
+d 1
+
+Ns 0
+
+newmtl Wedge8209Mtl
+Material Color
+Ka 0.940601 0.940601 0.940601
+Kd 0.940601 0.940601 0.940601
+Ks 0.379929 0.379929 0.379929 
+
+d 1
+
+Ns 0
+
+newmtl Part2Mtl
+Material Color
+Ka 0.157281 0.325037 0.598942
+Kd 0.157281 0.325037 0.598942
+Ks 0.0104854 0.0216691 0.0399295 
+
+d 0.501961
+
+Ns 0
+
+newmtl Union1Mtl
+Material Color
+Ka 0.124741 0.113921 0.121986
+Kd 0.124741 0.113921 0.121986
+Ks 0.0503856 0.0460151 0.0492727 
+
+d 1
+
+Ns 0
+
+newmtl Part6Mtl
+Material Color
+Ka 0.151058 0.0962661 0.0677246
+Kd 0.151058 0.0962661 0.0677246
+Ks 0.0610156 0.038884 0.0273554 
+
+d 1
+
+Ns 0
+
+newmtl Meshescenter22Mtl
+Material Color
+Ka 0.00658496 0.0891935 0.0242229
+Kd 0.00658496 0.0891935 0.0242229
+Ks 0.00265981 0.0360272 0.00978417 
+
+d 1
+
+Ns 0
+
+newmtl Part1Mtl
+Material Color
+Ka 0.157281 0.325037 0.598942
+Kd 0.157281 0.325037 0.598942
+Ks 0.0104854 0.0216691 0.0399295 
+
+d 1
+
+Ns 0
+
+newmtl Hedge1Mtl
+Material Color
+Ka 0.0160677 0.0581872 0.022013
+Kd 0.0160677 0.0581872 0.022013
+Ks 0.00649009 0.0235031 0.00889152 
+
+d 1
+
+Ns 0
+
+newmtl Wedge457Mtl
+Material Color
+Ka 0.121986 0.0143105 0.645555
+Kd 0.121986 0.0143105 0.645555
+Ks 0.0492727 0.00578033 0.260754 
+
+d 1
+
+Ns 0
+
+newmtl Wedge4561Mtl
+Material Color
+Ka 0.560499 0.0169881 0.00775103
+Kd 0.560499 0.0169881 0.00775103
+Ks 0.226398 0.00686184 0.00313081 
+
+d 1
+
+Ns 0
+
+newmtl Wedge913Mtl
+Material Color
+Ka 0.0289912 0.0962661 0.227137
+Kd 0.0289912 0.0962661 0.227137
+Ks 0.0117102 0.038884 0.0917454 
+
+d 1
+
+Ns 0
+
+newmtl Wedge1369Mtl
+Material Color
+Ka 1 0.442323 0
+Kd 1 0.442323 0
+Ks 0.403922 0.178664 0 
+
+d 1
+
+Ns 0
+
+newmtl Wedge4105Mtl
+Material Color
+Ka 0.766744 0.334458 0.0477758
+Kd 0.766744 0.334458 0.0477758
+Ks 0.309704 0.135095 0.0192977 
+
+d 1
+
+Ns 0
+
+newmtl Wedge6841Mtl
+Material Color
+Ka 0.0384727 0.20836 0.00411618
+Kd 0.0384727 0.20836 0.00411618
+Ks 0.01554 0.084161 0.00166261 
+
+d 1
+
+Ns 0
+
+newmtl Wedge7297Mtl
+Material Color
+Ka 0.147998 0.0277553 0.20471
+Kd 0.147998 0.0277553 0.20471
+Ks 0.0597796 0.011211 0.0826868 
+
+d 1
+
+Ns 0
+
+newmtl Wedge7753Mtl
+Material Color
+Ka 0.144972 0.0370285 0.000638183
+Kd 0.144972 0.0370285 0.000638183
+Ks 0.0585574 0.0149566 0.000257776 
+
+d 1
+
+Ns 0
+
+newmtl Wedge8665Mtl
+Material Color
+Ka 0.409826 0 0.409826
+Kd 0.409826 0 0.409826
+Ks 0.165537 0 0.165537 
+
+d 1
+
+Ns 0
+
+newmtl Meshescartoontreespinetreebright1Mtl
+Material Color
+Ka 0.14198 0.0477758 0.0169881
+Kd 0.14198 0.0477758 0.0169881
+Ks 0.0573489 0.0192977 0.00686184 
+
+d 1
+
+Ns 0
+
+newmtl Meshescartoontreespinetreebright0011Mtl
+Material Color
+Ka 0.0169881 0.215764 0.0600316
+Kd 0.0169881 0.215764 0.0600316
+Ks 0.00686184 0.0871519 0.0242481 
+
+d 1
+
+Ns 0
+
+newmtl Meshescartoontreespinetreebright0013Mtl
+Material Color
+Ka 0.0209511 0.130352 0.00837312
+Kd 0.0209511 0.130352 0.00837312
+Ks 0.00846261 0.0526521 0.00338208 
+
+d 1
+
+Ns 0
+
+newmtl Meshescartoontreestreegreenbigx3leaves00112Mtl
+Material Color
+Ka 0.215764 0.329729 0.0563741
+Kd 0.215764 0.329729 0.0563741
+Ks 0.0871519 0.133185 0.0227707 
+
+d 1
+
+Ns 0
+
+newmtl Meshescartoontreestreelonggreen0019Mtl
+Material Color
+Ka 0.523443 0.139022 0.121986
+Kd 0.523443 0.139022 0.121986
+Ks 0.21143 0.0561542 0.0492727 
+
+d 1
+
+Ns 0
+
+newmtl Meshescartoontreestreelonggreen00117Mtl
+Material Color
+Ka 0.464741 0.21952 1
+Kd 0.464741 0.21952 1
+Ks 0.187719 0.0886688 0.403922 
+
+d 1
+
+Ns 0
+
+newmtl Meshescartoontreestreegreenx3leaves00112Mtl
+Material Color
+Ka 0.176774 0.242796 0.344026
+Kd 0.176774 0.242796 0.344026
+Ks 0.071403 0.0980707 0.138959 
+
+d 1
+
+Ns 0
+
+newmtl Meshescartoontreestreegreenx3leaves00119Mtl
+Material Color
+Ka 0.157281 0.325037 0.598942
+Kd 0.157281 0.325037 0.598942
+Ks 0.0635291 0.131289 0.241926 
+
+d 1
+
+Ns 0
+
+newmtl Baseplate1Mtl
+Material Color
+Ka 0.0050282 0.124741 0
+Kd 0.0050282 0.124741 0
+Ks 0.000611272 0.0151646 0 
+
+d 1
+
+Ns 0
+

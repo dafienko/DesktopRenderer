@@ -1,9 +1,3 @@
-v -1.0 -1.0 0.0 # bottom left
-v -1.0 1.0 0.0 # top left
-v 1.0 -1.0 0.0 # bottom right
-v 1.0 1.0 0.0 # top right
-vn 0.5 0.0 0.0 # red
-vn 0.0 0.5 0.0 # green
-vn 0.0 0.0 0.5 # blue
-vn 1.0 1.0 1.0 # white 
-f 1//1 3//2 4//3 2//4
+version https://git-lfs.github.com/spec/v1
+oid sha256:6e8e2bd0716c37a2614bea90b4cd606cca50b04440e157398d3a5d10c6fa5635
+size 251
