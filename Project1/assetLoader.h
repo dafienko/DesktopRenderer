@@ -10,12 +10,14 @@ typedef struct material {
 	float metallic;
 	float roughness;
 	float ao;
+	int emitter;
 } material;
 
 typedef struct  {
 	vec3f ambient;
 	vec3f diffuse;
 	vec3f specular;
+	int emitter;
 } phong_material;
 
 typedef struct {
@@ -54,7 +56,8 @@ typedef struct d {
 	GLuint hProgram;
 	GLuint numFaces;
 	vec3f position, rotation, scale;
-	material material;
+	float bloomThreshold;
+
 	int* materialBounds;
 	unsigned int numMaterials;
 	mtllib materials;

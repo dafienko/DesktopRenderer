@@ -17,12 +17,26 @@
 #endif
 timer t = { 0 };
 
+vec3f lightDir = { 1, -1, 0 };
+
+/* SSAA settings */
+int antialiased = 1;
+int ssaaScale = 2;
+
+/* Bloom settings */
+float threshold = .8f;
+int bloomSize = 15;
+float bloomOffsetScale = 4.0f;
+float intensity = 4.0f;
+
+
 int bufferWidth, bufferHeight;
-GLuint prog, skyboxProg, blurProg, ssaaProg;
+GLuint prog, skyboxProg, blurProg, ssaaProg, bloomProg;
 GLuint rbo, tcb;
 GLuint aarbo, aafbo, aatex;
+GLuint brbo, bfbo, btex;
+GLuint trbo, tfbo, ttex;
 GLuint aavao, aavbo;
-GLuint tex;
 
 int numPBOs = 3;
 GLuint* pbo = NULL;
@@ -53,9 +67,6 @@ void use_rc(HDC* hdc, HGLRC* hrc) {
 
 pointlight pl = { 0 };
 
-int antialiased = 1;
-int scale = 2;
-
 float fov = 70.0f;
 
 void set_fov(const float newFov) {
@@ -68,7 +79,6 @@ float get_fov() {
 
 void init(int width, int height) {
 	int sampleSize = 2; // samples per pixel is sampleSize^2
-
 
 	GLuint vs = create_vertex_shader("shaders\\basic.vs");
 	GLuint fs = create_fragment_shader("shaders\\basic.fs");
@@ -90,12 +100,21 @@ void init(int width, int height) {
 	GLuint shaders2[] = { sbvs, sbfs };
 	skyboxProg = create_program(shaders2, 2);
 
+	GLuint bloomvs = create_vertex_shader("shaders\\bloom.vs");
+	GLuint bloomfs = create_fragment_shader("shaders\\bloom.fs");
+	GLuint bloomshaders[] = { bloomvs, bloomfs };
+	bloomProg = create_program(bloomshaders, 2);
+
 	//obj_data od = read_obj_file("models\\small_complex_world.obj", "models\\small_complex_world.mtl");
 	obj_data od = read_obj_file("models\\hexWorld.obj", "models\\hexWorld.mtl");
+	//obj_data od = read_obj_file("models\\cursed_world.obj", "models\\cursed_world.mtl");
+	//obj_data od = read_obj_file("models\\sphere.obj", NULL);
+	//obj_data od = read_obj_file("models\\emitters.obj", "models\\emitters.mtl");
 	model = obj_to_drawable(&od);
 	free_obj_data(&od);
 	model.hProgram = prog;
-	model.scale = (vec3f){ .1, .1, .1 };
+	model.scale = (vec3f){ .4, .4, .4 };
+	model.rotation = (vec3f){ 0, PI, 0 };
 
 	od = read_obj_file("models\\cube.obj", NULL);
 	skybox = obj_to_drawable(&od);
@@ -116,6 +135,84 @@ void init(int width, int height) {
 
 	lpBits = calloc(4 * width * height, sizeof(unsigned char));
 
+	/* generate buffers for bloom effect*/
+	glGenTextures(1, &btex);
+	glBindTexture(GL_TEXTURE_2D, btex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width * ssaaScale, ssaaScale * height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenRenderbuffers(1, &brbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, brbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width * ssaaScale, ssaaScale * height);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	glGenFramebuffers(1, &bfbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER,       
+		GL_COLOR_ATTACHMENT0, 
+		GL_TEXTURE_2D,        
+		btex,				   
+		0);                   
+
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER,     
+		GL_DEPTH_ATTACHMENT, 
+		GL_RENDERBUFFER,    
+		brbo);              
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE) {
+		MessageBoxA(NULL, "Error", "You screwed something up making a framebuffer", MB_OK);
+		exit(69);
+	}
+	CHECK_GL_ERRORS;
+
+	/* generate temp buffers */
+	glGenTextures(1, &ttex);
+	glBindTexture(GL_TEXTURE_2D, ttex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width * ssaaScale, ssaaScale * height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	CHECK_GL_ERRORS;
+
+	glGenRenderbuffers(1, &trbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, trbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width * ssaaScale, ssaaScale * height);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	CHECK_GL_ERRORS;
+
+	glGenFramebuffers(1, &tfbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
+	CHECK_GL_ERRORS;
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER,
+		GL_COLOR_ATTACHMENT0,
+		GL_TEXTURE_2D,
+		ttex,
+		0);
+	CHECK_GL_ERRORS;
+
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+		GL_DEPTH_ATTACHMENT,
+		GL_RENDERBUFFER,
+		trbo);
+	CHECK_GL_ERRORS;
+
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE) {
+		MessageBoxA(NULL, "Error", "You screwed something up making a framebuffer", MB_OK);
+		exit(69);
+	}
+	CHECK_GL_ERRORS;
+
+	/* if antialiased, generate buffers for antialiasing */
 	if (antialiased) {
 		glGenTextures(1, &aatex);
 		glBindTexture(GL_TEXTURE_2D, aatex);
@@ -123,14 +220,13 @@ void init(int width, int height) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width * scale, scale * height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width * ssaaScale, ssaaScale * height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		// create a renderbuffer object to store depth info
 		glGenRenderbuffers(1, &aarbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, aarbo);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width * scale, scale * height);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width * ssaaScale, ssaaScale * height);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 		// create a framebuffer object
@@ -151,31 +247,29 @@ void init(int width, int height) {
 			aarbo);              // 4. rbo ID
 
 		// check FBO status
-		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if (status != GL_FRAMEBUFFER_COMPLETE) {
 			MessageBoxA(NULL, "Error", "You screwed something up making a framebuffer", MB_OK);
 			exit(69);
 		}
-
-		// switch back to window-system-provided framebuffer
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		/* generate plane vertex object */
-		glGenVertexArrays(1, &aavao);
-		glBindVertexArray(aavao);
-
-		glGenBuffers(1, &aavbo);
-		glBindBuffer(GL_ARRAY_BUFFER, aavbo);
-		float p = 1.0f;
-		vec2f qPositions[] = {
-			{-p, -p},
-			{p, -p},
-			{p, p},
-			{-p, p}
-		};
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vec2f) * 4, qPositions, GL_STATIC_DRAW);
 	}
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	/* generate plane vertex object */
+	glGenVertexArrays(1, &aavao);
+	glBindVertexArray(aavao);
+
+	glGenBuffers(1, &aavbo);
+	glBindBuffer(GL_ARRAY_BUFFER, aavbo);
+	float p = 1.0f;
+	vec2f qPositions[] = {
+		{-p, -p},
+		{p, -p},
+		{p, p},
+		{-p, p}
+	};
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vec2f) * 4, qPositions, GL_STATIC_DRAW);
 
 	glGenFramebuffers(1, &framebuffer);
 
@@ -274,15 +368,17 @@ void draw_skybox(mat4f perspectiveMatrix) {
 	cameraMatrix = rotate_xyz(-currentCamera.rotation.x, -currentCamera.rotation.y, -currentCamera.rotation.z);
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-
+	
+	glUseProgram(skyboxProg);
+	GLuint gldLoc = glGetUniformLocation(skyboxProg, "globalLightDir");
+	glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
+	
 	drawable_draw(&skybox, perspectiveMatrix, cameraMatrix, skyboxTexture);
 }
 
 float draw(int dWidth, int dHeight) {
 	float dt = timer_reset(&t);
 	onFrame(dt);
-
-	int fps = (int)(1.0f / dt);
 
 	// calculate universal matrices for this frame
 	static mat4f cameraMatrix;
@@ -292,8 +388,37 @@ float draw(int dWidth, int dHeight) {
 
 	perspectiveMatrix = new_perspective(.1, 10000, fov, ((float)dWidth / (float)dHeight));
 
-	// draw everything else 
-	glClearColor(.1f, .1f, .1f, 0.0f);
+
+	if (antialiased) {
+		glViewport(0, 0, dWidth * ssaaScale, dHeight * ssaaScale);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
+
+	// clear buffers
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
+	model.bloomThreshold = threshold;
+	glUseProgram(prog);
+	GLuint gldLoc = glGetUniformLocation(prog, "globalLightDir");
+	glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
+	drawable_draw(&model, perspectiveMatrix, cameraMatrix, skyboxTexture);
+	model.bloomThreshold = 0;
+
+	/* render normal scene to temp fbo */
+	glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
+
+	// clear buffers
+	glClearColor(0, 0, 0, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -307,7 +432,51 @@ float draw(int dWidth, int dHeight) {
 	glDepthFunc(GL_LESS);
 
 	drawable_draw(&model, perspectiveMatrix, cameraMatrix, skyboxTexture);
+
+	/* combine the temp fbo and the bloom fbo */
+	if (antialiased) {
+		glBindFramebuffer(GL_FRAMEBUFFER, aafbo);
+	}
+	else {
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+	}
+
+	glClearColor(0, 1.0f, 0, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glDepthFunc(GL_ALWAYS);
+
+	glUseProgram(bloomProg);
+
+	GLuint swLoc, shLoc, sampLoc, osLoc, iLoc;
+	swLoc = glGetUniformLocation(bloomProg, "sWidth");
+	shLoc = glGetUniformLocation(bloomProg, "sHeight");
+	sampLoc = glGetUniformLocation(bloomProg, "sampleNum");
+	osLoc = glGetUniformLocation(bloomProg, "offsetScale");
+	iLoc = glGetUniformLocation(bloomProg, "intensity");
+
+	glUniform1i(swLoc, dWidth * ssaaScale);
+	glUniform1i(shLoc, dHeight * ssaaScale);
+	glUniform1i(sampLoc, bloomSize);
+	glUniform1f(osLoc, bloomOffsetScale);
+	glUniform1f(iLoc, intensity);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, btex);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, ttex);
+
+
+	glBindVertexArray(aavao);
 	CHECK_GL_ERRORS;
+
+	glBindBuffer(GL_ARRAY_BUFFER, aavbo);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	CHECK_GL_ERRORS;
+
+	glDrawArrays(GL_QUADS, 0, 4);
+	CHECK_GL_ERRORS;
+
 	if (!antialiased) {
 		SwapBuffers(glContextHDC);
 	}
@@ -324,15 +493,6 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int d
 		static HDC hdcMem;
 		static HGDIOBJ hOld;
 
-		if (antialiased) {
-			glBindFramebuffer(GL_FRAMEBUFFER, aafbo);
-			glViewport(0, 0, dWidth * scale, dHeight * scale);
-		}
-		else {
-			glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-		}
-		CHECK_GL_ERRORS;
 		float dt = draw(dWidth, dHeight);
 
 		if (antialiased) {
@@ -347,28 +507,28 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int d
 
 			glUseProgram(ssaaProg);
 
-			GLuint sLoc, swLoc, shLoc, sampLoc;
-			sLoc = glGetUniformLocation(ssaaProg, "scale");
+			GLuint swLoc, shLoc, sampLoc;
 			swLoc = glGetUniformLocation(ssaaProg, "sWidth");
 			shLoc = glGetUniformLocation(ssaaProg, "sHeight");
 			sampLoc = glGetUniformLocation(ssaaProg, "sampleNum");
 
-			glUniform1f(sLoc, (float)scale);
-			glUniform1i(swLoc, dWidth * scale);
-			glUniform1i(shLoc, dHeight * scale);
-			glUniform1i(sampLoc, scale);
+			glUniform1i(swLoc, dWidth * ssaaScale);
+			glUniform1i(shLoc, dHeight * ssaaScale);
+			glUniform1i(sampLoc, ssaaScale);
 
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, aatex);
-
+			CHECK_GL_ERRORS;
 
 			glBindVertexArray(aavao);
 
 			glBindBuffer(GL_ARRAY_BUFFER, aavbo);
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+			CHECK_GL_ERRORS;
 
 			glDrawArrays(GL_QUADS, 0, 4);
+			CHECK_GL_ERRORS;
 			SwapBuffers(glContextHDC);
 		}
 		CHECK_GL_ERRORS;

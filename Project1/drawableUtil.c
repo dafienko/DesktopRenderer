@@ -66,8 +66,8 @@ drawable obj_to_drawable(obj_data* od) {
 
 int timesDrawn = 0;
 void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLuint skyboxTexture) {
-	static GLuint perspectiveLoc, mvLoc, mLoc, cposLoc, scaleLoc,  /* random bullcrap */
-		maLoc, mdLoc, msLoc, mshiLoc, mkLoc; /* material bullcrap */
+	static GLuint perspectiveLoc, mvLoc, mLoc, cposLoc, scaleLoc, threshLoc,  /* random bullcrap */
+		maLoc, mdLoc, msLoc, mshiLoc, mkLoc, eLoc; /* material bullcrap */
 
 	glUseProgram(d->hProgram);
 
@@ -91,12 +91,14 @@ void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLu
 	mvLoc = glGetUniformLocation(d->hProgram, "mvMatrix");
 	cposLoc = glGetUniformLocation(d->hProgram, "cameraPos");
 	scaleLoc = glGetUniformLocation(d->hProgram, "scale");
+	threshLoc = glGetUniformLocation(d->hProgram, "threshold");
 
 	maLoc = glGetUniformLocation(d->hProgram, "m.ambient");
 	mdLoc = glGetUniformLocation(d->hProgram, "m.diffuse");
 	msLoc = glGetUniformLocation(d->hProgram, "m.specular");
 	mshiLoc = glGetUniformLocation(d->hProgram, "m.shininess");
 	mkLoc = glGetUniformLocation(d->hProgram, "m.k");
+	eLoc = glGetUniformLocation(d->hProgram, "emitter");
 
 	float* vals = get_vals_mat4f(perspectiveMatrix);
 	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, vals);
@@ -111,6 +113,8 @@ void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLu
 	vals = get_vals_mat4f(mvMatrix);
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, vals);
 	free(vals);
+
+	glUniform1f(threshLoc, d->bloomThreshold);
 
 	glUniform3f(cposLoc, currentCamera.position.x, currentCamera.position.y, currentCamera.position.z);
 	glUniform3f(scaleLoc, d->scale.x, d->scale.y, d->scale.z);
@@ -127,8 +131,9 @@ void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLu
 		glUniform3f(maLoc, mtl.material.ambient.x, mtl.material.ambient.y, mtl.material.ambient.z);
 		glUniform3f(mdLoc, mtl.material.diffuse.x, mtl.material.diffuse.y, mtl.material.diffuse.z);
 		glUniform3f(msLoc, mtl.material.specular.x, mtl.material.specular.y, mtl.material.specular.z);
-		glUniform1f(mshiLoc, 32);
-		glUniform1f(mkLoc, .9f);
+		glUniform1f(mshiLoc, 1);
+		glUniform1f(mkLoc, 1.0f);
+		glUniform1i(eLoc, mtl.material.emitter);
 
 		glDrawRangeElements(GL_TRIANGLES, indexFloor, indexCeil, groupNumIndices, GL_UNSIGNED_INT, indexFloor * sizeof(int));
 	}

@@ -10,9 +10,10 @@ out vec4 color;
 
 vec3 fogColor = vec3(202.0 / 255.0, 238.0 / 255.0, 1);
 float fogStart = 0;
-float fogEnd = 80;
+float fogEnd = 200;
 
 layout (binding=0) uniform samplerCube skybox;
+layout (binding=2) uniform sampler2D btex;
 
 struct material {
 	vec3 ambient;
@@ -24,12 +25,11 @@ struct material {
 
 uniform material m;
 
-float threshold = 0;
+uniform float threshold;
+uniform int emitter;
 
 float PI = 3.14159265359;
-vec3 globalLightDir = normalize(vec3(1, -1, 0));
-
-
+uniform vec3 globalLightDir;
 
 vec4 phong_shade(vec3 V, vec3 lightDir, float intensity) {
 	vec3 rColor = vec3(0);
@@ -49,7 +49,6 @@ vec4 phong_shade(vec3 V, vec3 lightDir, float intensity) {
 	return vec4(min(1, rColor.x), min(1, rColor.y), min(1, rColor.z), 1);
 }
 
-
 void main(void) {
 	vec3 camDir = normalize(worldPos - cameraPos); // direction vector from camera to position
 	
@@ -63,14 +62,17 @@ void main(void) {
 	float p = 32;
 	float R = max(0, min(1, (scale * pow(1 - abs(dot(camDir, norm)), p))));
 	color = mix(color, reflectColor, R);
-	
-	float fogAlpha = max(0, min(1, (glPos.z - fogStart) / (fogEnd - fogStart)));
-	color = mix(color, vec4(fogColor, 1), fogAlpha);
-	
-	
-	float colorVal = color.x + color.y + color.z;
-	if (colorVal < threshold) {
-		//color = vec4(0);
+
+	if (emitter == 0) {
+		float colorVal = (color.x + color.y + color.z) / 3;
+		if (colorVal < threshold) {
+			color = vec4(0);
+		} else {
+			float fogAlpha = max(0, min(1, (glPos.z - fogStart) / (fogEnd - fogStart)));
+			color = mix(color, vec4(fogColor, 1), fogAlpha);
+		}
+	} else {
+		color = vec4(m.ambient + m.diffuse + m.specular, 1.0);
 	}
 }
 

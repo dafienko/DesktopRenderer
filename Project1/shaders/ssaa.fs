@@ -3,11 +3,10 @@
 in vec2 pos;
 out vec4 color;
 
-layout (binding=1) uniform sampler2D tex;
+layout (binding=1) uniform sampler2D aatex;
 
 uniform int sWidth, sHeight;
 
-uniform float scale;
 uniform int sampleNum;
 
 void main() {
@@ -20,7 +19,7 @@ void main() {
 			vec2 offset = vec2(y - mid, x - mid);
 			offset = vec2(offset.x * (1.0f / sWidth), offset.y * (1.0f / sHeight));
 			
-			color += texture(tex, (texPos + offset));
+			color += texture(aatex, (texPos + offset));
 		}
 	}
 	

@@ -1,0 +1,31 @@
+newmtl Walls1Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.0234425 0.0231273 0.02408 
+
+d 1
+
+Ns 0
+
+newmtl Bluesphere1Mtl
+Material Color
+Ka 0 0.00258583 1
+Kd 0 0.00258583 1
+Ks 0 0.000162248 0.0627451 
+
+d 1
+
+Ns 0
+
+newmtl Emittersphere1Mtl
+Material Color
+Ka 0.0399472 1 0
+Kd 0.0399472 1 0
+Ks 0.00266314 0.0666667 0 
+
+d 1
+
+Ns 0
+
+e 1
