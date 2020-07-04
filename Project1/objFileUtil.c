@@ -105,14 +105,14 @@ obj_data read_obj_file(const char* filename, const char* mtlFilename) {
 	}
 	else {
 		mlib.materials = calloc(1, sizeof(mtllib_material));
-		mlib.materials->materialName = calloc(1, sizeof(char));
+		mlib.materials->materialName = calloc(2, sizeof(char));
 		mlib.materials->material.ambient = (vec3f){.1f, .1f, .1f};
 		mlib.materials->material.diffuse = (vec3f){ 0, 0, 1 };
 		mlib.materials->material.specular = (vec3f){ .6, .6, 1 };
 	}
 
 	lines_data ld = get_file_lines(filename);
-
+	
 	int numPositions = 0;
 	int numPositionsSpace = 100;
 	vec3f* positions = calloc(numPositionsSpace, sizeof(vec3f));
@@ -144,6 +144,7 @@ obj_data read_obj_file(const char* filename, const char* mtlFilename) {
 		STRIPPEDSTR rstripped = rstrip(lstripped);
 		SPLITSTR components = strsplit(rstripped, " ");
 
+		
 		char* firstToken = *(components + 0);
 		if (strcmp(firstToken, "v") == 0) {
 			if (numPositions + 1 >= numPositionsSpace) {
@@ -195,6 +196,7 @@ obj_data read_obj_file(const char* filename, const char* mtlFilename) {
 				*(indexGroups + numIndexGroups) = *(indexComponents + 0);
 				numIndexGroups++;
 			}
+			free(indexComponents);
 		}
 
 		if (strcmp(firstToken, "g") == 0 || i == ld.numLines - 1) { // we're starting a new group or on the last line (which means we're ending the last group)
@@ -225,6 +227,7 @@ obj_data read_obj_file(const char* filename, const char* mtlFilename) {
 			*(materialGroupBounds + numMaterialGroupBounds) = thisMaterialGroupBound;
 			numMaterialGroupBounds++;
 		}
+		
 
 		free_splitstr(&components);
 		free_strippedstr(&lstripped);
@@ -311,6 +314,7 @@ obj_data read_obj_file(const char* filename, const char* mtlFilename) {
 			
 		}
 	}
+	free_lines_data(&ld);
 	free(materialGroupSpace);
 	free(positions);
 	free(normals);

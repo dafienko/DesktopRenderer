@@ -89,21 +89,21 @@ void init(int width, int height) {
 	GLuint sbfs = create_fragment_shader("shaders\\skybox.fs");
 	GLuint shaders2[] = { sbvs, sbfs };
 	skyboxProg = create_program(shaders2, 2);
-	
 
-	obj_data od = read_obj_file("models\\cube.obj", NULL);
+	//obj_data od = read_obj_file("models\\small_complex_world.obj", "models\\small_complex_world.mtl");
+	obj_data od = read_obj_file("models\\hexWorld.obj", "models\\hexWorld.mtl");
+	model = obj_to_drawable(&od);
+	free_obj_data(&od);
+	model.hProgram = prog;
+	model.scale = (vec3f){ .1, .1, .1 };
+
+	od = read_obj_file("models\\cube.obj", NULL);
 	skybox = obj_to_drawable(&od);
 	free_obj_data(&od);
 	skybox.hProgram = skyboxProg;
 	skybox.scale = (vec3f){ 10.0f, 10.0f, 10.0f };
 	skybox.position = (vec3f){ 0, 0, 0 };
 	skybox.rotation = (vec3f){ 0, 0, 0 };
-
-	od = read_obj_file("models\\small_complex_world.obj", "models\\small_complex_world.mtl");
-	model = obj_to_drawable(&od);
-	free_obj_data(&od);
-	model.hProgram = prog;
-	model.scale = (vec3f){ .1, .1, .1 };
 
 
 	timer_start(&t);
@@ -438,4 +438,7 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int d
 
 void end() {
 	free(lpBits);
+	
+	free_drawable(&model);
+	free_drawable(&skybox);
 }

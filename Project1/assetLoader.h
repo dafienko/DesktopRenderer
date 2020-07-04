@@ -82,6 +82,7 @@ void free_obj_data(obj_data* od);
 
 drawable obj_to_drawable(obj_data* od);
 void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLuint skyboxTexture);
+void free_drawable(drawable* drawable);
 
 image_bit_data read_png_file(const char* filename);
 image_bit_data read_png_file_simple(const char* filename);

@@ -4,8 +4,13 @@ uniform vec3 cameraPos;
 
 in vec3 norm;
 in vec3 worldPos;
+in vec4 glPos;
 
 out vec4 color;
+
+vec3 fogColor = vec3(202.0 / 255.0, 238.0 / 255.0, 1);
+float fogStart = 0;
+float fogEnd = 80;
 
 layout (binding=0) uniform samplerCube skybox;
 
@@ -18,6 +23,8 @@ struct material {
 };
 
 uniform material m;
+
+float threshold = 0;
 
 float PI = 3.14159265359;
 vec3 globalLightDir = normalize(vec3(1, -1, 0));
@@ -53,10 +60,18 @@ void main(void) {
 	
 	float bias = 0;
 	float scale = 4;
-	float p = 15;
+	float p = 32;
 	float R = max(0, min(1, (scale * pow(1 - abs(dot(camDir, norm)), p))));
+	color = mix(color, reflectColor, R);
 	
-	color = (1 - R) * color + R * reflectColor;
+	float fogAlpha = max(0, min(1, (glPos.z - fogStart) / (fogEnd - fogStart)));
+	color = mix(color, vec4(fogColor, 1), fogAlpha);
+	
+	
+	float colorVal = color.x + color.y + color.z;
+	if (colorVal < threshold) {
+		//color = vec4(0);
+	}
 }
 
 

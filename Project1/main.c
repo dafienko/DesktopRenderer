@@ -15,7 +15,7 @@ HBITMAP hbmp;
 HDC painterDC;
 HWND hMainWnd, hOpenglWnd; 
 
-#define RENDER_TO_WINDOW 0
+#define RENDER_TO_WINDOW 1
 
 HDRAWDIB hdd;
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {

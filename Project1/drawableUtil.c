@@ -14,8 +14,13 @@ drawable obj_to_drawable(obj_data* od) {
 	mtllib mlib = { 0 };
 	mlib.numMaterials = od->materials.numMaterials;
 	mlib.materials = calloc(mlib.numMaterials, sizeof(mtllib_material));
+	memcpy(mlib.materials, od->materials.materials, mlib.numMaterials * sizeof(mtllib_material));
+	
 	for (int i = 0; i < mlib.numMaterials; i++) {
-		*(mlib.materials + i) = *(od->materials.materials + i);
+		char* mtlNameSrc = (od->materials.materials + i)->materialName;
+		int nameLen = strlen(mtlNameSrc);
+		(mlib.materials + i)->materialName = calloc(nameLen + 1, sizeof(char));
+		memcpy((mlib.materials + i)->materialName, mtlNameSrc, nameLen);
 	}
 	d.materials = mlib;
 	d.numMaterials = mlib.numMaterials;
@@ -23,7 +28,6 @@ drawable obj_to_drawable(obj_data* od) {
 	// copy the obj's material-group bounds data
 	d.materialBounds = calloc(mlib.numMaterials + 1, sizeof(int));
 	memcpy(d.materialBounds, od->materialBounds, (mlib.numMaterials + 1) * sizeof(int));
-
 
 	glGenVertexArrays(1, d.vao);
 	CHECK_GL_ERRORS;
@@ -128,4 +132,12 @@ void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLu
 
 		glDrawRangeElements(GL_TRIANGLES, indexFloor, indexCeil, groupNumIndices, GL_UNSIGNED_INT, indexFloor * sizeof(int));
 	}
+}
+
+void free_drawable(drawable* drawable) {
+	glDeleteBuffers(3, drawable->vbo);
+	glDeleteVertexArrays(1, drawable->vao);
+	free(drawable->vbo);
+	free(drawable->vao);
+	free_mtllib_data(&drawable->materials);
 }

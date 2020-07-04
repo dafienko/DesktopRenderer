@@ -12,11 +12,12 @@ uniform vec3 cameraPos;
 
 out vec3 norm;
 out vec3 worldPos;
-
+out vec4 glPos;
 
 void main(void) {
 	norm = (mMatrix * vec4(normal, 0)).xyz;
 	worldPos = (mMatrix * vec4(position * scale, 1)).xyz; // world position
 	
 	gl_Position = perspectiveMatrix * mvMatrix * vec4(position * scale, 1.0);
+	glPos = gl_Position;
 }

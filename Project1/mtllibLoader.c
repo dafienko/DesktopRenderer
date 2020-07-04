@@ -90,7 +90,9 @@ mtllib read_mtl_file(const char* filename) {
 }
 
 void free_mtllib_material(mtllib_material* mlm) {
-	free(mlm->materialName); 
+	if (mlm != NULL) {
+		free(mlm->materialName);
+	}
 }
 
 void free_mtllib_data(mtllib* ml) {
