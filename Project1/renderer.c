@@ -19,9 +19,9 @@ timer t = { 0 };
 
 vec3f lightDir = { 1, -1, 0 };
 
-/* SSAA settings */
-int antialiased = 1;
-int ssaaScale = 2;
+/* MSAA settings */
+int antialiased = 0;
+int MSAASamples = 2;
 
 /* Bloom settings */
 float threshold = .8f;
@@ -36,6 +36,7 @@ GLuint rbo, tcb;
 GLuint aarbo, aafbo, aatex;
 GLuint brbo, bfbo, btex;
 GLuint trbo, tfbo, ttex;
+
 GLuint aavao, aavbo;
 
 int numPBOs = 3;
@@ -106,15 +107,15 @@ void init(int width, int height) {
 	bloomProg = create_program(bloomshaders, 2);
 
 	//obj_data od = read_obj_file("models\\small_complex_world.obj", "models\\small_complex_world.mtl");
-	obj_data od = read_obj_file("models\\hexWorld.obj", "models\\hexWorld.mtl");
+	//obj_data od = read_obj_file("models\\hexWorld.obj", "models\\hexWorld.mtl");
 	//obj_data od = read_obj_file("models\\cursed_world.obj", "models\\cursed_world.mtl");
 	//obj_data od = read_obj_file("models\\sphere.obj", NULL);
-	//obj_data od = read_obj_file("models\\emitters.obj", "models\\emitters.mtl");
+	obj_data od = read_obj_file("models\\emitters.obj", "models\\emitters.mtl");
 	model = obj_to_drawable(&od);
 	free_obj_data(&od);
 	model.hProgram = prog;
-	model.scale = (vec3f){ .4, .4, .4 };
-	model.rotation = (vec3f){ 0, PI, 0 };
+	model.scale = (vec3f){ .2, .2, .2 };
+	model.rotation = (vec3f){ 0, PI/2, 0 };
 
 	od = read_obj_file("models\\cube.obj", NULL);
 	skybox = obj_to_drawable(&od);
@@ -135,126 +136,138 @@ void init(int width, int height) {
 
 	lpBits = calloc(4 * width * height, sizeof(unsigned char));
 
-	/* generate buffers for bloom effect*/
-	glGenTextures(1, &btex);
-	glBindTexture(GL_TEXTURE_2D, btex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width * ssaaScale, ssaaScale * height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glGenRenderbuffers(1, &brbo);
-	glBindRenderbuffer(GL_RENDERBUFFER, brbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width * ssaaScale, ssaaScale * height);
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-	glGenFramebuffers(1, &bfbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER,       
-		GL_COLOR_ATTACHMENT0, 
-		GL_TEXTURE_2D,        
-		btex,				   
-		0);                   
-
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER,     
-		GL_DEPTH_ATTACHMENT, 
-		GL_RENDERBUFFER,    
-		brbo);              
-
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (status != GL_FRAMEBUFFER_COMPLETE) {
-		MessageBoxA(NULL, "Error", "You screwed something up making a framebuffer", MB_OK);
-		exit(69);
-	}
-	CHECK_GL_ERRORS;
-
-	/* generate temp buffers */
-	glGenTextures(1, &ttex);
-	glBindTexture(GL_TEXTURE_2D, ttex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width * ssaaScale, ssaaScale * height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	CHECK_GL_ERRORS;
-
-	glGenRenderbuffers(1, &trbo);
-	glBindRenderbuffer(GL_RENDERBUFFER, trbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width * ssaaScale, ssaaScale * height);
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-	CHECK_GL_ERRORS;
-
-	glGenFramebuffers(1, &tfbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
-	CHECK_GL_ERRORS;
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER,
-		GL_COLOR_ATTACHMENT0,
-		GL_TEXTURE_2D,
-		ttex,
-		0);
-	CHECK_GL_ERRORS;
-
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER,
-		GL_DEPTH_ATTACHMENT,
-		GL_RENDERBUFFER,
-		trbo);
-	CHECK_GL_ERRORS;
-
-	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (status != GL_FRAMEBUFFER_COMPLETE) {
-		MessageBoxA(NULL, "Error", "You screwed something up making a framebuffer", MB_OK);
-		exit(69);
-	}
-	CHECK_GL_ERRORS;
-
-	/* if antialiased, generate buffers for antialiasing */
 	if (antialiased) {
-		glGenTextures(1, &aatex);
-		glBindTexture(GL_TEXTURE_2D, aatex);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width * ssaaScale, ssaaScale * height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		glGenTextures(1, &btex);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, btex);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAASamples, GL_RGB, width, height, GL_TRUE);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
-		// create a renderbuffer object to store depth info
-		glGenRenderbuffers(1, &aarbo);
-		glBindRenderbuffer(GL_RENDERBUFFER, aarbo);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width * ssaaScale, ssaaScale * height);
+		glGenRenderbuffers(1, &brbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, brbo);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAASamples, GL_DEPTH24_STENCIL8, width, height);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-		// create a framebuffer object
-		glGenFramebuffers(1, &aafbo);
-		glBindFramebuffer(GL_FRAMEBUFFER, aafbo);
+		glGenFramebuffers(1, &bfbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
+		
+		glFramebufferTexture2D(GL_FRAMEBUFFER,
+			GL_COLOR_ATTACHMENT0,
+			GL_TEXTURE_2D_MULTISAMPLE,
+			btex,
+			0);
 
-		// attach the texture to FBO color attachment point
-		glFramebufferTexture2D(GL_FRAMEBUFFER,        // 1. fbo target: GL_FRAMEBUFFER
-			GL_COLOR_ATTACHMENT0,  // 2. attachment point
-			GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
-			aatex,				   // 4. tex ID
-			0);                    // 5. mipmap level: 0(base)
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+			GL_DEPTH_ATTACHMENT,
+			GL_RENDERBUFFER,
+			brbo);
 
-		// attach the renderbuffer to depth attachment point
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
-			GL_DEPTH_ATTACHMENT, // 2. attachment point
-			GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
-			aarbo);              // 4. rbo ID
-
-		// check FBO status
-		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if (status != GL_FRAMEBUFFER_COMPLETE) {
 			MessageBoxA(NULL, "Error", "You screwed something up making a framebuffer", MB_OK);
 			exit(69);
 		}
-	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		CHECK_GL_ERRORS;
+		/* generate temp buffers */
+		glGenTextures(1, &ttex);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, ttex);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAASamples, GL_RGB, width, height, GL_TRUE);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+		CHECK_GL_ERRORS;
+
+		glGenRenderbuffers(1, &trbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, trbo);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAASamples, GL_DEPTH24_STENCIL8, width, height);
+		CHECK_GL_ERRORS;
+
+		glGenFramebuffers(1, &tfbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
+		CHECK_GL_ERRORS;
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER,
+			GL_COLOR_ATTACHMENT0,
+			GL_TEXTURE_2D_MULTISAMPLE,
+			ttex,
+			0);
+		CHECK_GL_ERRORS;
+
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+			GL_DEPTH_ATTACHMENT,
+			GL_RENDERBUFFER,
+			trbo);
+		CHECK_GL_ERRORS;
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		CHECK_GL_ERRORS;
+	}
+	else {
+		/* generate buffers for bloom effect*/
+		glGenTextures(1, &btex);
+		glBindTexture(GL_TEXTURE_2D, btex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glGenRenderbuffers(1, &brbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, brbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+		glGenFramebuffers(1, &bfbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER,       
+			GL_COLOR_ATTACHMENT0, 
+			GL_TEXTURE_2D,        
+			btex,				   
+			0);                   
+
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER,     
+			GL_DEPTH_ATTACHMENT, 
+			GL_RENDERBUFFER,    
+			brbo);              
+
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE) {
+			MessageBoxA(NULL, "Error", "You screwed something up making a framebuffer", MB_OK);
+			exit(69);
+		}
+
+		/* generate temp buffers */
+		glGenTextures(1, &ttex);
+		glBindTexture(GL_TEXTURE_2D, ttex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glGenRenderbuffers(1, &trbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, trbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+		glGenFramebuffers(1, &tfbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER,
+			GL_COLOR_ATTACHMENT0,
+			GL_TEXTURE_2D,
+			ttex,
+			0);
+
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+			GL_DEPTH_ATTACHMENT,
+			GL_RENDERBUFFER,
+			trbo);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+	
 
 	/* generate plane vertex object */
 	glGenVertexArrays(1, &aavao);
@@ -271,12 +284,12 @@ void init(int width, int height) {
 	};
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vec2f) * 4, qPositions, GL_STATIC_DRAW);
 
+	/* generate the framebuffer that's read from onto the screen */
 	glGenFramebuffers(1, &framebuffer);
 
-	glGenTextures(1, &tcb);
+	glGenTextures(1, &tcb); // texture color buffer
 	glBindTexture(GL_TEXTURE_2D, tcb);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	
 	glGenRenderbuffers(1, &rbo);
@@ -291,7 +304,6 @@ void init(int width, int height) {
 
 	pbo = calloc(numPBOs, sizeof(GLuint));
 	glGenBuffers(numPBOs, pbo);
-
 
 	for (int i = numPBOs - 1; i >= 0; i--) {
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, *(pbo + i));
@@ -388,11 +400,6 @@ float draw(int dWidth, int dHeight) {
 
 	perspectiveMatrix = new_perspective(.1, 10000, fov, ((float)dWidth / (float)dHeight));
 
-
-	if (antialiased) {
-		glViewport(0, 0, dWidth * ssaaScale, dHeight * ssaaScale);
-	}
-
 	glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
 
 	// clear buffers
@@ -434,12 +441,7 @@ float draw(int dWidth, int dHeight) {
 	drawable_draw(&model, perspectiveMatrix, cameraMatrix, skyboxTexture);
 
 	/* combine the temp fbo and the bloom fbo */
-	if (antialiased) {
-		glBindFramebuffer(GL_FRAMEBUFFER, aafbo);
-	}
-	else {
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-	}
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
 	glClearColor(0, 1.0f, 0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -447,24 +449,36 @@ float draw(int dWidth, int dHeight) {
 
 	glUseProgram(bloomProg);
 
-	GLuint swLoc, shLoc, sampLoc, osLoc, iLoc;
+	GLuint swLoc, shLoc, sampLoc, osLoc, iLoc, msaaLoc, numSamplesLoc;
 	swLoc = glGetUniformLocation(bloomProg, "sWidth");
 	shLoc = glGetUniformLocation(bloomProg, "sHeight");
 	sampLoc = glGetUniformLocation(bloomProg, "sampleNum");
 	osLoc = glGetUniformLocation(bloomProg, "offsetScale");
 	iLoc = glGetUniformLocation(bloomProg, "intensity");
+	msaaLoc = glGetUniformLocation(bloomProg, "msaa");
+	numSamplesLoc = glGetUniformLocation(bloomProg, "numSamples");
 
-	glUniform1i(swLoc, dWidth * ssaaScale);
-	glUniform1i(shLoc, dHeight * ssaaScale);
+	glUniform1i(swLoc, dWidth);
+	glUniform1i(shLoc, dHeight);
+	glUniform1i(msaaLoc, antialiased);
 	glUniform1i(sampLoc, bloomSize);
+	glUniform1i(numSamplesLoc, MSAASamples);
 	glUniform1f(osLoc, bloomOffsetScale);
 	glUniform1f(iLoc, intensity);
 
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, btex);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, ttex);
 
+	if (antialiased) {
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, btex);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, ttex);
+	}
+	else {
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, btex);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, ttex);
+	}
 
 	glBindVertexArray(aavao);
 	CHECK_GL_ERRORS;
@@ -494,48 +508,8 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int d
 		static HGDIOBJ hOld;
 
 		float dt = draw(dWidth, dHeight);
-
-		if (antialiased) {
-			glViewport(0, 0, dWidth, dHeight);
-
-			glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-			
-			glClearColor(0, 1.0f, 0, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
-			glDepthFunc(GL_ALWAYS);
-
-			glUseProgram(ssaaProg);
-
-			GLuint swLoc, shLoc, sampLoc;
-			swLoc = glGetUniformLocation(ssaaProg, "sWidth");
-			shLoc = glGetUniformLocation(ssaaProg, "sHeight");
-			sampLoc = glGetUniformLocation(ssaaProg, "sampleNum");
-
-			glUniform1i(swLoc, dWidth * ssaaScale);
-			glUniform1i(shLoc, dHeight * ssaaScale);
-			glUniform1i(sampLoc, ssaaScale);
-
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, aatex);
-			CHECK_GL_ERRORS;
-
-			glBindVertexArray(aavao);
-
-			glBindBuffer(GL_ARRAY_BUFFER, aavbo);
-			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-			CHECK_GL_ERRORS;
-
-			glDrawArrays(GL_QUADS, 0, 4);
-			CHECK_GL_ERRORS;
-			SwapBuffers(glContextHDC);
-		}
-		CHECK_GL_ERRORS;
-
 		memset(lpBits, 0, 4 * bufferWidth * bufferHeight);
 
-		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
 		if (numDownloads < numPBOs) {

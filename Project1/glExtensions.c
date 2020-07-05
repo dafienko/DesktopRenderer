@@ -84,6 +84,7 @@ void GLEInit() {
     glDrawRangeElements = (PFNGLDRAWRANGEELEMENTSPROC)getProc("glDrawRangeElements");
     glDeleteBuffers = (PFNGLDELETEBUFFERSPROC)getProc("glDeleteBuffers");
     glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)getProc("glDeleteVertexArrays");
+    glRenderbufferStorageMultisample = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)getProc("glRenderbufferStorageMultisample");
 
     initialized = 1;
 }
