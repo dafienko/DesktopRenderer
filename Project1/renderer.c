@@ -137,32 +137,36 @@ void init(int width, int height) {
 
 	lpBits = calloc(4 * width * height, sizeof(unsigned char));
 
+	/* generate buffers for bloom effect*/
+	glGenTextures(1, &btex);
+	glBindTexture(GL_TEXTURE_2D, btex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenRenderbuffers(1, &brbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, brbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	glGenFramebuffers(1, &bfbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER,
+		GL_COLOR_ATTACHMENT0,
+		GL_TEXTURE_2D,
+		btex,
+		0);
+
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+		GL_DEPTH_ATTACHMENT,
+		GL_RENDERBUFFER,
+		brbo);
+
 	if (antialiased) {
-		/* bloom effect buffer */
-		glGenTextures(1, &btex);
-		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, btex);
-		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAASamples, GL_RGB, width, height, GL_TRUE);
-		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-
-		glGenRenderbuffers(1, &brbo);
-		glBindRenderbuffer(GL_RENDERBUFFER, brbo);
-		glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAASamples, GL_DEPTH24_STENCIL8, width, height);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-		glGenFramebuffers(1, &bfbo);
-		glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
-		
-		glFramebufferTexture2D(GL_FRAMEBUFFER,
-			GL_COLOR_ATTACHMENT0,
-			GL_TEXTURE_2D_MULTISAMPLE,
-			btex,
-			0);
-
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER,
-			GL_DEPTH_ATTACHMENT,
-			GL_RENDERBUFFER,
-			brbo);
-
 		/* generate temp buffers */
 		glGenTextures(1, &ttex);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, ttex);
@@ -190,35 +194,6 @@ void init(int width, int height) {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 	else {
-		/* generate buffers for bloom effect*/
-		glGenTextures(1, &btex);
-		glBindTexture(GL_TEXTURE_2D, btex);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		glGenRenderbuffers(1, &brbo);
-		glBindRenderbuffer(GL_RENDERBUFFER, brbo);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-		glGenFramebuffers(1, &bfbo);
-		glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
-
-		glFramebufferTexture2D(GL_FRAMEBUFFER,       
-			GL_COLOR_ATTACHMENT0, 
-			GL_TEXTURE_2D,        
-			btex,				   
-			0);                   
-
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER,     
-			GL_DEPTH_ATTACHMENT, 
-			GL_RENDERBUFFER,    
-			brbo);              
-
 		/* generate temp buffers */
 		glGenTextures(1, &ttex);
 		glBindTexture(GL_TEXTURE_2D, ttex);
@@ -405,16 +380,14 @@ float draw(int dWidth, int dHeight) {
 	glUniform1f(osLoc, bloomOffsetScale);
 	glUniform1f(iLoc, intensity);
 
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, btex);
 
 	if (antialiased) {
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, btex);
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, ttex);
 	}
 	else {
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, btex);
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, ttex);
 	}
