@@ -61,16 +61,17 @@ mtllib read_mtl_file(const char* filename) {
 			char* materialName = *(components + 1);
 
 			(materials + materialIndex)->materialName = calloc(strlen(materialName) + 1, sizeof(char));
+			(materials + materialIndex)->material = (phong_material){ 0 };
 			memcpy((materials + materialIndex)->materialName, materialName, strlen(materialName) * sizeof(char));
 		}
 		else if (strcmp(firstToken, "Ka") == 0) {
-			(materials + materialIndex)->material.ambient = vector_mul_3f(parse_color(components), .3);
+			(materials + materialIndex)->material.ambient = vector_mul_3f(parse_color(components), 1.0f);
 		}
 		else if (strcmp(firstToken, "Kd") == 0) {
 			(materials + materialIndex)->material.diffuse = vector_mul_3f(parse_color(components), 1.0f);
 		}
 		else if (strcmp(firstToken, "Ks") == 0) {
-			(materials + materialIndex)->material.specular = vector_mul_3f(parse_color(components), 2.0f);
+			(materials + materialIndex)->material.specular = vector_mul_3f(parse_color(components), 1.0f);
 		}
 		else if (strcmp(firstToken, "e") == 0) { // I made this value up, it stands for emitter (0 | 1)
 			(materials + materialIndex)->material.emitter = atoi(*(components + 1));

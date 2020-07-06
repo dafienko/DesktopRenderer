@@ -149,6 +149,7 @@
     <ClCompile Include="desktopPainterMain.c" />
     <ClCompile Include="dibUtil.c" />
     <ClCompile Include="drawableUtil.c" />
+    <ClCompile Include="drawObject.c" />
     <ClCompile Include="errorUtil.c" />
     <ClCompile Include="fileUtil.c" />
     <ClCompile Include="floatVectorMath.c" />
@@ -200,6 +201,7 @@
     <ClCompile Include="timer.c" />
     <ClInclude Include="errors.h" />
     <ClInclude Include="keyboard.h" />
+    <ClInclude Include="perlin.h" />
     <ClInclude Include="timer.h" />
     <ClCompile Include="windowCreation.c" />
   </ItemGroup>

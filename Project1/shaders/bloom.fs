@@ -34,7 +34,7 @@ void main() {
 	
 	color /= totalWeight;
 	
-	
+	///*
 	if (msaa == 0) {
 		color = texture(tex, texPos);
 	} else {
@@ -45,6 +45,8 @@ void main() {
 		}
 		color += texelColor / numSamples;
 	}
+	//*/
+	
 }
 
 

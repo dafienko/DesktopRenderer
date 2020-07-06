@@ -15,7 +15,7 @@ HBITMAP hbmp;
 HDC painterDC;
 HWND hMainWnd, hOpenglWnd; 
 
-#define RENDER_TO_WINDOW 1
+#define RENDER_TO_WINDOW 0
 
 HDRAWDIB hdd;
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
@@ -33,7 +33,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	RegisterClass(&wndClass);
 
-	float scale = 1;
+	float scale = 1.0f;
 
 	int vWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
 	int vHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
@@ -155,7 +155,6 @@ WNDPROC mainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		int h = rect.bottom - rect.top;
 
 		SetWindowPos(hOpenglWnd, HWND_TOP, 0, 0, w, h, SWP_HIDEWINDOW);
-
 
 		PostMessage(hWnd, WM_PAINT, 0, 0);
 		return 0;

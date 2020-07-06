@@ -47,7 +47,6 @@ typedef struct d {
 	GLuint* vbo;
 	GLuint hProgram;
 	GLenum drawType;
-	vec3f position, rotation, scale;
 	float bloomThreshold;
 
 	int* materialBounds;
@@ -76,7 +75,6 @@ obj_data read_obj_file(const char* filename, const char* mtlFilename);
 void free_obj_data(obj_data* od);
 
 drawable obj_to_drawable(obj_data* od);
-void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLuint skyboxTexture);
 void free_drawable(drawable* drawable);
 
 image_bit_data read_png_file(const char* filename);

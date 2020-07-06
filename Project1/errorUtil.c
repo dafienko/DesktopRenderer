@@ -48,6 +48,8 @@ void check_std_err(const char* desc, const int e) {
 
 	free(mbCaption);
 	free(buff);
+
+	exit(69);
 }
 
 void check_gl_err(const char* file, const int line) {

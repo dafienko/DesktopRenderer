@@ -16,23 +16,24 @@
 timer t = { 0 };
 
 /* general settings */
-vec3f lightDir = { 1, -1, 0 };
+vec3f lightDir = { 0, -.2f, 1 };
 vec3f backgroundColor = { 1, 0, 0 };
+float fov = 105.0f;
 
 /* MSAA settings */
 int antialiased = 1;
 int MSAASamples = 2;
 
 /* Bloom settings */
-float threshold = .8f;
-int bloomSize = 15;
-float bloomOffsetScale = 4.0f;
-float intensity = 4.0f;
+float threshold = .7f;
+int bloomSize = 8;
+float bloomOffsetScale = 1.0f;
+float intensity = 10;
 
 int bufferWidth, bufferHeight;
 unsigned char* lpBits = NULL;
 
-GLuint prog, skyboxProg, blurProg, ssaaProg, bloomProg;
+GLuint prog, skyboxProg, blurProg, ssaaProg, bloomProg, gskyboxProg;
 GLuint framebuffer, rbo, tcb;
 GLuint brbo, bfbo, btex;
 GLuint trbo, tfbo, ttex;
@@ -43,7 +44,15 @@ GLuint* pbo = NULL;
 GLuint planeVAO, planeVBO;
 GLuint skyboxTexture;
 drawable skybox = { 0 };
-drawable model = { 0 };
+object_model skyboxOM = { 0 };
+
+object_model* objectModels = NULL;
+int numObjectModels = 0;
+int objectModelSpace = 0;
+
+drawable* meshes = NULL;
+int numMeshes = 0;
+int meshSpace = 0;
 
 int initialized = 0;
 
@@ -56,8 +65,6 @@ void use_rc(HDC* hdc, HGLRC* hrc) {
 		CHECK_ERRORS;
 	}
 }
-
-float fov = 70.0f;
 
 void set_fov(const float newFov) {
 	fov = newFov;
@@ -95,38 +102,30 @@ void init(int width, int height) {
 
 	GLuint sbvs = create_vertex_shader("shaders\\skybox.vs");
 	GLuint sbfs = create_fragment_shader("shaders\\skybox.fs");
-	GLuint shaders2[] = { sbvs, sbfs };
-	skyboxProg = create_program(shaders2, 2);
+	GLuint skyboxShaders[] = { sbvs, sbfs };
+	skyboxProg = create_program(skyboxShaders, 2);
+
+	GLuint gsbvs = create_vertex_shader("shaders\\generated_skybox.vs");
+	GLuint gsbfs = create_fragment_shader("shaders\\generated_skybox.fs");
+	GLuint generatedSkyboxShaders[] = { gsbvs, gsbfs };
+	gskyboxProg = create_program(generatedSkyboxShaders, 2);
 
 	GLuint bloomvs = create_vertex_shader("shaders\\bloom.vs");
 	GLuint bloomfs = create_fragment_shader("shaders\\bloom.fs");
 	GLuint bloomshaders[] = { bloomvs, bloomfs };
 	bloomProg = create_program(bloomshaders, 2);
 
-	//obj_data od = read_obj_file("models\\small_complex_world.obj", "models\\small_complex_world.mtl");
-	//obj_data od = read_obj_file("models\\hexWorld.obj", "models\\hexWorld.mtl");
-	//obj_data od = read_obj_file("models\\cursed_world.obj", "models\\cursed_world.mtl");
-	//obj_data od = read_obj_file("models\\sphere.obj", NULL);
-	obj_data od = read_obj_file("models\\emitters.obj", "models\\emitters.mtl");
-	model = obj_to_drawable(&od);
-	free_obj_data(&od);
-	model.hProgram = prog;
-	model.scale = (vec3f){ .2, .2, .2 };
-	model.rotation = (vec3f){ 0, PI/2, 0 };
-
-	od = read_obj_file("models\\cube.obj", NULL);
+	obj_data od = read_obj_file("models\\cube.obj", NULL);
 	skybox = obj_to_drawable(&od);
 	free_obj_data(&od);
-	skybox.hProgram = skyboxProg;
-	skybox.scale = (vec3f){ 10.0f, 10.0f, 10.0f };
-	skybox.position = (vec3f){ 0, 0, 0 };
-	skybox.rotation = (vec3f){ 0, 0, 0 };
+	skybox.hProgram = gskyboxProg;
+	skyboxOM.position = (vec3f){ 0, 0, 0 };
+	skyboxOM.rotation = (vec3f){ 0, 0, 0 };
+	skyboxOM.scale = (vec3f){ 10, 10, 10 };
 
 	timer_start(&t);
 
 	currentCamera = (camera){ 0 };
-	currentCamera.position = (vec3f){ 0.0f, 0, 8.0f };
-	currentCamera.rotation = (vec3f){ 0, 0, 0 };
 
 	wglSwapIntervalEXT(0);
 
@@ -262,6 +261,108 @@ void init(int width, int height) {
 	initialized = 1;
 }
 
+HMESH add_drawable(drawable d) {
+	if (meshes == NULL) {
+		meshSpace = 10;
+		meshes = calloc(meshSpace, sizeof(drawable));
+	}
+
+	if (meshSpace <= numMeshes + 1) {
+		meshSpace *= 2;
+		meshes = realloc(meshes, meshSpace * sizeof(drawable));
+	}
+
+	HMESH hMesh = numMeshes;
+	*(meshes + numMeshes) = d;
+	numMeshes++;
+
+	return hMesh;
+}
+
+HMESH load_mesh(const char* meshName, const char* mtlFileName) {
+	obj_data od = read_obj_file(meshName, mtlFileName);
+	drawable d = obj_to_drawable(&od);
+	d.hProgram = prog;
+	free_obj_data(&od);
+
+	return add_drawable(d);
+}
+
+object_model* create_model_from_mesh(HMESH hMesh) {
+	object_model om = { 0 };
+	om.hModel = hMesh;
+	
+	om.position = (vec3f){ 0 };
+	om.rotation = (vec3f){ 0 };
+	om.scale = (vec3f){ 1, 1, 1 };
+	om.visible = 1;
+
+	if (objectModels == NULL) {
+		objectModelSpace = 10;
+		objectModels = calloc(objectModelSpace, sizeof(object_model));
+	}
+
+	if (objectModelSpace <= numObjectModels + 1) {
+		objectModelSpace *= 2;
+		objectModels = realloc(objectModels, objectModelSpace * sizeof(object_model));
+	}
+
+	*(objectModels + numObjectModels) = om;
+	numObjectModels++;
+
+	return (objectModels + numObjectModels - 1);
+}
+
+HMESH init_dynamic_mesh(GLenum drawType) {
+	drawable d = { 0 };
+	d.hProgram = prog;
+	d.drawType = drawType;
+
+	d.vao = calloc(1, sizeof(GLuint));
+	d.vbo = calloc(3, sizeof(GLuint));
+
+	glGenVertexArrays(1, d.vao);
+	glBindVertexArray(*d.vao);
+	glGenBuffers(3, d.vbo);
+	d.bloomThreshold = threshold;
+
+	HMESH hMesh = add_drawable(d);
+
+	return hMesh;
+}
+
+void edit_mesh_indices(HMESH hMesh, int* indices, int numIndices) {
+	drawable* d = (meshes + hMesh);
+
+	glBindVertexArray(*d->vao);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *(d->vbo + 2));
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(int), indices, GL_DYNAMIC_DRAW);
+}
+
+void edit_mesh_positions(HMESH hMesh, vec3f* positions, int numPositions) {
+	drawable* d = (meshes + hMesh);
+
+	glBindVertexArray(*d->vao);
+	glBindBuffer(GL_ARRAY_BUFFER, *(d->vbo + 0));
+	glBufferData(GL_ARRAY_BUFFER, numPositions * sizeof(vec3f), positions, GL_DYNAMIC_DRAW);
+}
+
+void edit_mesh_normals(HMESH hMesh, vec3f* normals, int numNormals) {
+	drawable* d = (meshes + hMesh);
+
+	glBindVertexArray(*d->vao);
+	glBindBuffer(GL_ARRAY_BUFFER, *(d->vbo + 1));
+	glBufferData(GL_ARRAY_BUFFER, numNormals * sizeof(vec3f), normals, GL_DYNAMIC_DRAW);
+}
+
+void edit_mesh_mtl_data(HMESH hMesh, mtllib mlib, int* groupBounds, int numGroups) {
+	drawable* d = (meshes + hMesh);
+
+	d->materialBounds = groupBounds;
+	d->numMaterials = numGroups - 1;
+	d->materials = mlib;
+}
+
 void draw_skybox(mat4f perspectiveMatrix) {
 	glDisable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
@@ -274,13 +375,17 @@ void draw_skybox(mat4f perspectiveMatrix) {
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-	glUseProgram(skyboxProg);
-	GLuint gldLoc = glGetUniformLocation(skyboxProg, "globalLightDir");
+	glUseProgram(gskyboxProg);
+	static GLuint gldLoc, bgcLoc, scLoc;
+	gldLoc = glGetUniformLocation(skybox.hProgram, "globalLightDir");
+	bgcLoc = glGetUniformLocation(gskyboxProg, "backgroundColor");
+	scLoc = glGetUniformLocation(gskyboxProg, "sunColor");
+	
 	glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
-
-	if (skyboxTexture > 0) {
-		drawable_draw(&skybox, perspectiveMatrix, cameraMatrix, skyboxTexture);
-	}
+	glUniform3f(bgcLoc, backgroundColor.x, backgroundColor.y, backgroundColor.z);
+	glUniform3f(scLoc, 0.0f, .5f, 1.0f);
+	
+	draw_model(&skyboxOM, &skybox, perspectiveMatrix, cameraMatrix, skyboxTexture);
 }
 
 float draw(int dWidth, int dHeight) {
@@ -294,7 +399,7 @@ float draw(int dWidth, int dHeight) {
 	cameraMatrix = from_position_and_rotation(inverse_vec3f(currentCamera.position), inverse_vec3f(currentCamera.rotation));
 	cameraMatrix = mat_mul_mat(new_identity(), cameraMatrix);
 
-	perspectiveMatrix = new_perspective(.1, 10000, fov, ((float)dWidth / (float)dHeight));
+	perspectiveMatrix = new_perspective(5, 10000, fov, ((float)dWidth / (float)dHeight));
 
 	glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
 
@@ -303,14 +408,12 @@ float draw(int dWidth, int dHeight) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	model.bloomThreshold = threshold;
 	glUseProgram(prog);
 	static GLuint skyboxLoc, bgcLoc, gldLoc;
 
@@ -318,12 +421,19 @@ float draw(int dWidth, int dHeight) {
 	skyboxLoc = glGetUniformLocation(prog, "skyboxHandle");
 	bgcLoc = glGetUniformLocation(prog, "backgroundColor");
 
-	glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
-	glUniform3f(bgcLoc, backgroundColor.x, backgroundColor.y, backgroundColor.z);
-	glUniform1i(skyboxLoc, skyboxTexture);
+	for (int i = 0; i < numObjectModels; i++) {
+		object_model om = *(objectModels + i);
+		drawable d = *(meshes + (int)om.hModel);
 
-	drawable_draw(&model, perspectiveMatrix, cameraMatrix, skyboxTexture);
-	model.bloomThreshold = 0;
+		d.bloomThreshold = threshold;
+
+		glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
+		glUniform3f(bgcLoc, backgroundColor.x, backgroundColor.y, backgroundColor.z);
+		glUniform1i(skyboxLoc, skyboxTexture);
+
+		draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
+		d.bloomThreshold = 0;
+	}
 
 	/* render normal scene to temp fbo */
 	glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
@@ -342,7 +452,12 @@ float draw(int dWidth, int dHeight) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	drawable_draw(&model, perspectiveMatrix, cameraMatrix, skyboxTexture);
+	for (int i = 0; i < numObjectModels; i++) {
+		object_model om = *(objectModels + i);
+		drawable d = *(meshes + (int)om.hModel);
+
+		draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
+	}
 
 	/* combine the temp fbo and the bloom fbo */
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -475,7 +590,6 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int d
 
 void end() {
 	free(lpBits);
-	
-	free_drawable(&model);
+
 	free_drawable(&skybox);
 }

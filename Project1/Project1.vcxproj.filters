@@ -210,6 +210,9 @@
     <ClCompile Include="mtllibLoader.c">
       <Filter>Source Files\assetLoader</Filter>
     </ClCompile>
+    <ClCompile Include="drawObject.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="winUtil.h">
@@ -252,6 +255,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="errors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="perlin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

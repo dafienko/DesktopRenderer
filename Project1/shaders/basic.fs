@@ -27,9 +27,10 @@ out vec4 color;
 
 const float PI = 3.14159265359;
 
-vec3 fogColor = vec3(202.0 / 255.0, 238.0 / 255.0, 1);
+//vec3 fogColor = vec3(202.0 / 255.0, 238.0 / 255.0, 1);
+vec3 fogColor = vec3(0);
 float fogStart = 0;
-float fogEnd = 200;
+float fogEnd = 2000;
 
 vec4 phong_shade(vec3 V, vec3 lightDir, float intensity) {
 	vec3 rColor = vec3(0);
@@ -37,6 +38,7 @@ vec4 phong_shade(vec3 V, vec3 lightDir, float intensity) {
 	float diffuse = max(0, dot(-lightDir, norm));
 
 	float specular = 0;
+	
 	if (dot(norm, lightDir) < 0) {
 		specular = max(0, dot(reflect(lightDir, norm), -V));
 		specular = pow(specular, m.shininess);
@@ -53,7 +55,7 @@ void main(void) {
 	if (emitter == 0) { 
 		vec3 camDir = normalize(worldPos - cameraPos); // direction vector from camera to position
 	
-		color = phong_shade(camDir, globalLightDir, 1);
+		color = phong_shade(camDir, normalize(globalLightDir), 1);
 		
 		vec3 bounce = reflect(camDir, norm);
 		vec4 skyboxColor;
@@ -70,16 +72,20 @@ void main(void) {
 		float R = max(0, min(1, (scale * pow(1 - abs(dot(camDir, norm)), p))));
 		color = mix(color, reflectColor, R);
 		
-		float colorVal = (color.x + color.y + color.z) / 3;
+		color = vec4(clamp(color.x, 0, 1), clamp(color.y, 0, 1), clamp(color.z, 0, 1), 1);
+		
+		float colorVal = (color.x + color.y + color.z) / 3.0f;
 		if (colorVal < threshold) {
 			color = vec4(0);
-		} else {
-			float fogAlpha = max(0, min(1, (glPos.z - fogStart) / (fogEnd - fogStart)));
-			color = mix(color, vec4(fogColor, 1), fogAlpha);
 		}
 	} else {
 		color = vec4(m.ambient + m.diffuse + m.specular, 1.0);
 	}
+	
+	//if (threshold == 0) {
+		float fogAlpha = max(0, min(1, (glPos.z - fogStart) / (fogEnd - fogStart)));
+		color = mix(color, vec4(fogColor, 1), fogAlpha);
+	//}
 }
 
 
