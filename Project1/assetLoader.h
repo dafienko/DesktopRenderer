@@ -5,14 +5,6 @@
 #include "matrixMath.h"
 #include <gl/GL.h>
 
-typedef struct material {
-	vec3f color;
-	float metallic;
-	float roughness;
-	float ao;
-	int emitter;
-} material;
-
 typedef struct  {
 	vec3f ambient;
 	vec3f diffuse;
@@ -54,7 +46,7 @@ typedef struct d {
 	GLuint* vao;
 	GLuint* vbo;
 	GLuint hProgram;
-	GLuint numFaces;
+	GLenum drawType;
 	vec3f position, rotation, scale;
 	float bloomThreshold;
 

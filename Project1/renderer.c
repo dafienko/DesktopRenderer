@@ -10,17 +10,17 @@
 
 #pragma comment(lib, "Vfw32.lib")
 
-
-
 #ifndef PI
 #define PI 3.14159265359
 #endif
 timer t = { 0 };
 
+/* general settings */
 vec3f lightDir = { 1, -1, 0 };
+vec3f backgroundColor = { 1, 0, 0 };
 
 /* MSAA settings */
-int antialiased = 0;
+int antialiased = 1;
 int MSAASamples = 2;
 
 /* Bloom settings */
@@ -29,21 +29,17 @@ int bloomSize = 15;
 float bloomOffsetScale = 4.0f;
 float intensity = 4.0f;
 
-
 int bufferWidth, bufferHeight;
 GLuint prog, skyboxProg, blurProg, ssaaProg, bloomProg;
 GLuint rbo, tcb;
-GLuint aarbo, aafbo, aatex;
 GLuint brbo, bfbo, btex;
 GLuint trbo, tfbo, ttex;
 
-GLuint aavao, aavbo;
+GLuint planeVAO, planeVBO;
 
 int numPBOs = 3;
 GLuint* pbo = NULL;
 GLuint framebuffer = 0;
-
-GLuint lightbo = 0;
 
 GLuint skyboxTexture;
 
@@ -66,8 +62,6 @@ void use_rc(HDC* hdc, HGLRC* hrc) {
 	}
 }
 
-pointlight pl = { 0 };
-
 float fov = 70.0f;
 
 void set_fov(const float newFov) {
@@ -76,6 +70,14 @@ void set_fov(const float newFov) {
 
 float get_fov() {
 	return fov;
+}
+
+void set_current_skybox(GLuint tex) {
+	skyboxTexture = tex;
+}
+
+void set_background_color(float r, float g, float b) {
+	backgroundColor = (vec3f){ r, g, b };
 }
 
 void init(int width, int height) {
@@ -125,7 +127,6 @@ void init(int width, int height) {
 	skybox.position = (vec3f){ 0, 0, 0 };
 	skybox.rotation = (vec3f){ 0, 0, 0 };
 
-
 	timer_start(&t);
 
 	currentCamera = (camera){ 0 };
@@ -137,6 +138,7 @@ void init(int width, int height) {
 	lpBits = calloc(4 * width * height, sizeof(unsigned char));
 
 	if (antialiased) {
+		/* bloom effect buffer */
 		glGenTextures(1, &btex);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, btex);
 		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAASamples, GL_RGB, width, height, GL_TRUE);
@@ -161,44 +163,31 @@ void init(int width, int height) {
 			GL_RENDERBUFFER,
 			brbo);
 
-		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if (status != GL_FRAMEBUFFER_COMPLETE) {
-			MessageBoxA(NULL, "Error", "You screwed something up making a framebuffer", MB_OK);
-			exit(69);
-		}
-
-		CHECK_GL_ERRORS;
 		/* generate temp buffers */
 		glGenTextures(1, &ttex);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, ttex);
 		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAASamples, GL_RGB, width, height, GL_TRUE);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-		CHECK_GL_ERRORS;
 
 		glGenRenderbuffers(1, &trbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, trbo);
 		glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAASamples, GL_DEPTH24_STENCIL8, width, height);
-		CHECK_GL_ERRORS;
 
 		glGenFramebuffers(1, &tfbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
-		CHECK_GL_ERRORS;
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER,
 			GL_COLOR_ATTACHMENT0,
 			GL_TEXTURE_2D_MULTISAMPLE,
 			ttex,
 			0);
-		CHECK_GL_ERRORS;
 
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER,
 			GL_DEPTH_ATTACHMENT,
 			GL_RENDERBUFFER,
 			trbo);
-		CHECK_GL_ERRORS;
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		CHECK_GL_ERRORS;
 	}
 	else {
 		/* generate buffers for bloom effect*/
@@ -229,12 +218,6 @@ void init(int width, int height) {
 			GL_DEPTH_ATTACHMENT, 
 			GL_RENDERBUFFER,    
 			brbo);              
-
-		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if (status != GL_FRAMEBUFFER_COMPLETE) {
-			MessageBoxA(NULL, "Error", "You screwed something up making a framebuffer", MB_OK);
-			exit(69);
-		}
 
 		/* generate temp buffers */
 		glGenTextures(1, &ttex);
@@ -270,11 +253,11 @@ void init(int width, int height) {
 	
 
 	/* generate plane vertex object */
-	glGenVertexArrays(1, &aavao);
-	glBindVertexArray(aavao);
+	glGenVertexArrays(1, &planeVAO);
+	glBindVertexArray(planeVAO);
 
-	glGenBuffers(1, &aavbo);
-	glBindBuffer(GL_ARRAY_BUFFER, aavbo);
+	glGenBuffers(1, &planeVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
 	float p = 1.0f;
 	vec2f qPositions[] = {
 		{-p, -p},
@@ -312,61 +295,7 @@ void init(int width, int height) {
 
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-
-	skyboxTexture = create_skybox_texture("assets/skybox.png");
-
-	maxPointLights = 500;
-	pointlights = calloc(maxPointLights, sizeof(pointlight*));
-	pl.position = (vec4f){ 4.0f, 0.0f, -4.0f, 0.0f };
-	pl.color = (vec4f){ 1.0f, 0.0f, 0.0f, 1.0f };
-	pl.intensity = 1.0f;
-	pl.range = 10.0f;
-	*(pointlights + 0) = &pl;
-
 	initialized = 1;
-}
-
-pointlight* get_closest_pointlights(vec4f position) {
-	pointlight closestPointlights[MAX_POINTLIGHTS_PER_OBJECT];
-	float minDist = 0;
-	float maxDist = 999999.0f;
-
-	for (int i = 0; i < MAX_POINTLIGHTS_PER_OBJECT; i++) {
-		/* Pointer to a Pointer of a PointLight */
-		for (pointlight* pppl = *pointlights; pppl != NULL;  pppl++ ) {
-			float dist = magnitude_4f(vector_sub_4f(pppl->position, position));
-			if (dist > minDist&& dist < maxDist) {
-				maxDist = dist;
-				closestPointlights[i] = *pppl;
-			}
-		}
-
-		minDist = magnitude_4f(vector_sub_4f(closestPointlights[i].position, position));
-	}
-
-	return closestPointlights;
-}
-
-void buffer_pointlight_data(vec4f position) {
-	pointlight buffer[MAX_POINTLIGHTS_PER_OBJECT];
-	pointlight* closestPointlights = get_closest_pointlights(position);
-	
-	int numPointlights = 0;
-	for (pointlight* pppl = *pointlights; pppl != NULL;  pppl++) {
-		if (numPointlights >= MAX_POINTLIGHTS_PER_OBJECT || pppl == NULL) {
-			break;
-		}
-		
-		buffer[numPointlights] = *(closestPointlights + numPointlights);
-
-		numPointlights++;
-	}
-
-	if (numPointlights > 0) {
-		glBindBuffer(GL_UNIFORM_BUFFER, lightbo);
-		glBufferData(GL_UNIFORM_BUFFER, numPointlights * sizeof(pointlight), buffer, GL_DYNAMIC_COPY);
-	}
-
 }
 
 void draw_skybox(mat4f perspectiveMatrix) {
@@ -380,12 +309,14 @@ void draw_skybox(mat4f perspectiveMatrix) {
 	cameraMatrix = rotate_xyz(-currentCamera.rotation.x, -currentCamera.rotation.y, -currentCamera.rotation.z);
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	
+
 	glUseProgram(skyboxProg);
 	GLuint gldLoc = glGetUniformLocation(skyboxProg, "globalLightDir");
 	glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
-	
-	drawable_draw(&skybox, perspectiveMatrix, cameraMatrix, skyboxTexture);
+
+	if (skyboxTexture > 0) {
+		drawable_draw(&skybox, perspectiveMatrix, cameraMatrix, skyboxTexture);
+	}
 }
 
 float draw(int dWidth, int dHeight) {
@@ -416,8 +347,16 @@ float draw(int dWidth, int dHeight) {
 
 	model.bloomThreshold = threshold;
 	glUseProgram(prog);
-	GLuint gldLoc = glGetUniformLocation(prog, "globalLightDir");
+	static GLuint skyboxLoc, bgcLoc, gldLoc;
+
+	gldLoc = glGetUniformLocation(prog, "globalLightDir");
+	skyboxLoc = glGetUniformLocation(prog, "skyboxHandle");
+	bgcLoc = glGetUniformLocation(prog, "backgroundColor");
+
 	glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
+	glUniform3f(bgcLoc, backgroundColor.x, backgroundColor.y, backgroundColor.z);
+	glUniform1i(skyboxLoc, skyboxTexture);
+
 	drawable_draw(&model, perspectiveMatrix, cameraMatrix, skyboxTexture);
 	model.bloomThreshold = 0;
 
@@ -425,7 +364,7 @@ float draw(int dWidth, int dHeight) {
 	glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
 
 	// clear buffers
-	glClearColor(0, 0, 0, 0.0f);
+	glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -480,10 +419,10 @@ float draw(int dWidth, int dHeight) {
 		glBindTexture(GL_TEXTURE_2D, ttex);
 	}
 
-	glBindVertexArray(aavao);
+	glBindVertexArray(planeVAO);
 	CHECK_GL_ERRORS;
 
-	glBindBuffer(GL_ARRAY_BUFFER, aavbo);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 	CHECK_GL_ERRORS;
@@ -506,8 +445,9 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int d
 		static HBITMAP hbmp;
 		static HDC hdcMem;
 		static HGDIOBJ hOld;
-
-		float dt = draw(dWidth, dHeight);
+	
+		glViewport(0, 0, bufferWidth, bufferHeight);
+		float dt = draw(bufferWidth, bufferHeight);
 		memset(lpBits, 0, 4 * bufferWidth * bufferHeight);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);

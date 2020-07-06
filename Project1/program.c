@@ -8,23 +8,27 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "assetLoader.h"
 
 #ifndef PI 
 #define PI 3.14159265359
 #endif
 
+GLuint defaultSkybox;
+
 float rad(float d) {
     return d * (PI / 180.0f);
 }
 
-
 void programInit() {
-
+    defaultSkybox = create_skybox_texture("assets/skybox.png");
+    set_current_skybox(defaultSkybox);
+    set_background_color(.1f, .1f, .1f);
 }
 
 float sensitivity = .2;
 float speed = 5.0f;
-void onFrame(float dt) {
+void handle_input(float dt) {
     float xDir = 0;
     float zDir = 0;
     float yDir = 0;
@@ -103,6 +107,10 @@ void onFrame(float dt) {
     else if (isKeyDown(VK_SUBTRACT)) {
         set_fov(get_fov() - dt * 10);
     }
+}
+
+void onFrame(float dt) {
+    handle_input(dt);
 }
 
 void programClose() {

@@ -19,21 +19,12 @@ void end();
 
 void use_rc(HDC*, HGLRC*);
 
-
-#define MAX_POINTLIGHTS_PER_OBJECT 4 //number of pointlights that can affect one object at a time
-int maxPointLights; // number of total pointlights that can exist at one time
-typedef struct pointlight {
-	vec4f position;
-	vec4f color;
-	float intensity;
-	float range;
-	vec2f padding;
-} pointlight;
-pointlight** pointlights;
-
-void buffer_pointlight_data(vec4f position);
+void set_current_skybox(GLuint skyboxTexture);
+void set_background_color(float r, float g, float b);
 
 void set_fov(const float fov);
 float get_fov();
+
+
 
 #endif

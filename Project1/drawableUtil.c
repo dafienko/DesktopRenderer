@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include "errors.h"
 
-
 drawable obj_to_drawable(obj_data* od) {
 	drawable d = { 0 };
 	d.vao = calloc(1, sizeof(GLuint));
@@ -58,11 +57,10 @@ drawable obj_to_drawable(obj_data* od) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, od->indices, GL_STATIC_DRAW);
 	CHECK_GL_ERRORS;
 
-	d.numFaces = od->numTris;
+	d.drawType = GL_TRIANGLES;
 
 	return d;
 }
-
 
 int timesDrawn = 0;
 void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLuint skyboxTexture) {
@@ -70,8 +68,6 @@ void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLu
 		maLoc, mdLoc, msLoc, mshiLoc, mkLoc, eLoc; /* material bullcrap */
 
 	glUseProgram(d->hProgram);
-
-	//buffer_pointlight_data((vec4f) {d->position.x, d->position.y, d->position.z, 0.0f});
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
@@ -135,7 +131,7 @@ void drawable_draw(drawable* d, mat4f perspectiveMatrix, mat4f cameraMatrix, GLu
 		glUniform1f(mkLoc, 1.0f);
 		glUniform1i(eLoc, mtl.material.emitter);
 
-		glDrawRangeElements(GL_TRIANGLES, indexFloor, indexCeil, groupNumIndices, GL_UNSIGNED_INT, indexFloor * sizeof(int));
+		glDrawRangeElements(d->drawType, indexFloor, indexCeil, groupNumIndices, GL_UNSIGNED_INT, indexFloor * sizeof(int));
 	}
 }
 

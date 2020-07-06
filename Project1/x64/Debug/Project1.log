@@ -1,7 +1,14 @@
-﻿  renderer.c
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(426,45): warning C4020: 'draw_skybox': too many actual parameters
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(541,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(587,8): warning C4047: 'function': 'UINT' differs in levels of indirection from 'void *'
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(587,8): warning C4024: 'DrawDibDraw': different types for formal and actual parameter 13
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(335): warning C4172: returning address of local variable or temporary: closestPointlights
+﻿  main.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(24,36): warning C4047: '=': 'WNDPROC' differs in levels of indirection from 'WNDPROC (__cdecl *)(HWND,UINT,WPARAM,LPARAM)'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(65,24): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(65,43): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(74,8): warning C4013: 'error' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(80,33): warning C4013: 'run_message_loop' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(85,15): warning C4133: 'function': incompatible types - from 'HDC' to 'HWND'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(85,27): warning C4133: 'function': incompatible types - from 'HWND' to 'HDC'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(48,1): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(108,22): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(122,13): warning C4013: 'sprintf_s' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(125,42): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(167,49): warning C4047: 'return': 'WNDPROC' differs in levels of indirection from 'LRESULT'
   Project1.vcxproj -> C:\Users\dafie\source\repos\GLTesting4\x64\Debug\Project1.exe

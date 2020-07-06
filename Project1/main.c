@@ -15,7 +15,7 @@ HBITMAP hbmp;
 HDC painterDC;
 HWND hMainWnd, hOpenglWnd; 
 
-#define RENDER_TO_WINDOW 0
+#define RENDER_TO_WINDOW 1
 
 HDRAWDIB hdd;
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
@@ -40,9 +40,12 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	int sWidth = GetSystemMetrics(SM_CXSCREEN);
 	int sHeight = GetSystemMetrics(SM_CYSCREEN);
 
-	vec2i wndSize = (vec2i){ sWidth / scale, sHeight / scale };
+	vec2i wndSize = { 0 };
 	if (RENDER_TO_WINDOW) {
 		wndSize = (vec2i){ 800, 600 };
+	}
+	else {
+		wndSize = (vec2i){ sWidth / scale, sHeight / scale };
 	}
 	
 
@@ -59,7 +62,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	GLEInit(); // must be initialized after a context has been made current
 	
-	init(wndSize.x, wndSize.y);
+	init(wndSize.x / scale, wndSize.y / scale);
 
 	if (RENDER_TO_WINDOW) {
 		ShowWindow(hMainWnd, nShowCmd);
@@ -150,8 +153,6 @@ WNDPROC mainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		PostQuitMessage(69);
 		return 0;
 	case WM_SIZE:
-		//resize(LOWORD(lParam), HIWORD(lParam));
-		
 		GetClientRect(hMainWnd, &rect);
 		int w = rect.right - rect.left;
 		int h = rect.bottom - rect.top;
