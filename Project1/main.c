@@ -92,7 +92,8 @@ int run_message_loop() {
 	HDC hdc;
 	RECT rect;
 
-	unsigned long last = get_current_ms();
+	unsigned long lastSecond = get_current_ms();
+	unsigned long last = lastSecond;
 	int numFrames = 0;
 	int lastFPS = 0;
 
@@ -106,13 +107,14 @@ int run_message_loop() {
 			}
 		}
 
-		
+
 		if (RENDER_TO_WINDOW) {
 			hdc = GetDC(hMainWnd);
 			GetWindowRect(hMainWnd, &rect);
 			int w = rect.right - rect.left;
 			int h = rect.bottom - rect.top;
 
+			draw(w, h);
 			display(hdd, hdc, w, h, 0, 0);
 
 			char* text = calloc(50, sizeof(char));
@@ -131,12 +133,20 @@ int run_message_loop() {
 
 		unsigned long now = get_current_ms();
 		int diff = now - last;
-		if (diff >= 1000) {
+		int secondDiff = now - lastSecond;
+		last = now;
+
+		if (secondDiff >= 1000) {
 			lastFPS = numFrames;
 
 			numFrames = 0;
-			last = now;
+			lastSecond = now;
 		}	
+
+		int timeToWait = 20 - diff;
+		if (timeToWait > 0) {
+			Sleep(timeToWait);
+		}
 	}
 }
 
@@ -171,6 +181,8 @@ void on_paint_desktop(HDC desktopHDC) {
 	int sWidth = GetSystemMetrics(SM_CXSCREEN);
 	int sHeight = GetSystemMetrics(SM_CYSCREEN);
 	
+	draw(sWidth, sHeight);
+
 	display(hdd, desktopHDC, sWidth, sHeight, 0, 0);
 	display(hdd, desktopHDC, sWidth, sHeight, sWidth, 0);
 }

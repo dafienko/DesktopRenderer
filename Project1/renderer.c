@@ -26,9 +26,9 @@ int MSAASamples = 2;
 
 /* Bloom settings */
 float threshold = .7f;
-int bloomSize = 8;
-float bloomOffsetScale = 1.0f;
-float intensity = 10;
+int bloomSize = 9;
+float bloomOffsetScale = 1.6f;
+float intensity = 1;
 
 int bufferWidth, bufferHeight;
 unsigned char* lpBits = NULL;
@@ -388,144 +388,135 @@ void draw_skybox(mat4f perspectiveMatrix) {
 	draw_model(&skyboxOM, &skybox, perspectiveMatrix, cameraMatrix, skyboxTexture);
 }
 
-float draw(int dWidth, int dHeight) {
-	static mat4f perspectiveMatrix;
-	float dt = timer_reset(&t);
-	onFrame(dt);
-
-	// calculate universal matrices for this frame
-	static mat4f cameraMatrix;
-
-	cameraMatrix = from_position_and_rotation(inverse_vec3f(currentCamera.position), inverse_vec3f(currentCamera.rotation));
-	cameraMatrix = mat_mul_mat(new_identity(), cameraMatrix);
-
-	perspectiveMatrix = new_perspective(5, 10000, fov, ((float)dWidth / (float)dHeight));
-
-	glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
-
-	// clear buffers
-	glClearColor(0, 0, 0, 0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glClear(GL_DEPTH_BUFFER_BIT);
-
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-
-	glUseProgram(prog);
-	static GLuint skyboxLoc, bgcLoc, gldLoc;
-
-	gldLoc = glGetUniformLocation(prog, "globalLightDir");
-	skyboxLoc = glGetUniformLocation(prog, "skyboxHandle");
-	bgcLoc = glGetUniformLocation(prog, "backgroundColor");
-
-	for (int i = 0; i < numObjectModels; i++) {
-		object_model om = *(objectModels + i);
-		drawable d = *(meshes + (int)om.hModel);
-
-		d.bloomThreshold = threshold;
-
-		glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
-		glUniform3f(bgcLoc, backgroundColor.x, backgroundColor.y, backgroundColor.z);
-		glUniform1i(skyboxLoc, skyboxTexture);
-
-		draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
-		d.bloomThreshold = 0;
-	}
-
-	/* render normal scene to temp fbo */
-	glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
-
-	// clear buffers
-	glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glClear(GL_DEPTH_BUFFER_BIT);
-
-	//draw the skybox 
-	draw_skybox(perspectiveMatrix, cameraMatrix);
-
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-
-	for (int i = 0; i < numObjectModels; i++) {
-		object_model om = *(objectModels + i);
-		drawable d = *(meshes + (int)om.hModel);
-
-		draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
-	}
-
-	/* combine the temp fbo and the bloom fbo */
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-	glClearColor(0, 1.0f, 0, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glDepthFunc(GL_ALWAYS);
-
-	glUseProgram(bloomProg);
-
-	GLuint swLoc, shLoc, sampLoc, osLoc, iLoc, msaaLoc, numSamplesLoc;
-	swLoc = glGetUniformLocation(bloomProg, "sWidth");
-	shLoc = glGetUniformLocation(bloomProg, "sHeight");
-	sampLoc = glGetUniformLocation(bloomProg, "sampleNum");
-	osLoc = glGetUniformLocation(bloomProg, "offsetScale");
-	iLoc = glGetUniformLocation(bloomProg, "intensity");
-	msaaLoc = glGetUniformLocation(bloomProg, "msaa");
-	numSamplesLoc = glGetUniformLocation(bloomProg, "numSamples");
-
-	glUniform1i(swLoc, dWidth);
-	glUniform1i(shLoc, dHeight);
-	glUniform1i(msaaLoc, antialiased);
-	glUniform1i(sampLoc, bloomSize);
-	glUniform1i(numSamplesLoc, MSAASamples);
-	glUniform1f(osLoc, bloomOffsetScale);
-	glUniform1f(iLoc, intensity);
-
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, btex);
-
-	if (antialiased) {
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, ttex);
-	}
-	else {
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, ttex);
-	}
-
-	glBindVertexArray(planeVAO);
-	CHECK_GL_ERRORS;
-
-	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-	CHECK_GL_ERRORS;
-
-	glDrawArrays(GL_QUADS, 0, 4);
-	CHECK_GL_ERRORS;
-
-	if (!antialiased) {
-		SwapBuffers(glContextHDC);
-	}
-
-	return dt;
-}
-
 unsigned int numDownloads = 0;
 int dx = 0;
 unsigned char* ptr;
-void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int destPosY) {
+float draw(int dWidth, int dHeight) {
 	if (initialized) {
-		static HBITMAP hbmp;
-		static HDC hdcMem;
-		static HGDIOBJ hOld;
-	
-		glViewport(0, 0, bufferWidth, bufferHeight);
-		float dt = draw(bufferWidth, bufferHeight);
+		static mat4f perspectiveMatrix;
+		float dt = timer_reset(&t);
+		onFrame(dt);
+
+		// calculate universal matrices for this frame
+		static mat4f cameraMatrix;
+
+		cameraMatrix = from_position_and_rotation(inverse_vec3f(currentCamera.position), inverse_vec3f(currentCamera.rotation));
+		cameraMatrix = mat_mul_mat(new_identity(), cameraMatrix);
+
+		perspectiveMatrix = new_perspective(5, 10000, fov, ((float)dWidth / (float)dHeight));
+
+		glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
+
+		// clear buffers
+		glClearColor(0, 0, 0, 0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+
+		glUseProgram(prog);
+		static GLuint skyboxLoc, bgcLoc, gldLoc;
+
+		gldLoc = glGetUniformLocation(prog, "globalLightDir");
+		skyboxLoc = glGetUniformLocation(prog, "skyboxHandle");
+		bgcLoc = glGetUniformLocation(prog, "backgroundColor");
+
+		for (int i = 0; i < numObjectModels; i++) {
+			object_model om = *(objectModels + i);
+			drawable d = *(meshes + (int)om.hModel);
+
+			d.bloomThreshold = threshold;
+
+			glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
+			glUniform3f(bgcLoc, backgroundColor.x, backgroundColor.y, backgroundColor.z);
+			glUniform1i(skyboxLoc, skyboxTexture);
+
+			draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
+			d.bloomThreshold = 0;
+		}
+
+		/* render normal scene to temp fbo */
+		glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
+
+		// clear buffers
+		glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		//draw the skybox 
+		draw_skybox(perspectiveMatrix, cameraMatrix);
+
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+
+		for (int i = 0; i < numObjectModels; i++) {
+			object_model om = *(objectModels + i);
+			drawable d = *(meshes + (int)om.hModel);
+
+			draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
+		}
+
+		/* combine the temp fbo and the bloom fbo */
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+		glClearColor(0, 1.0f, 0, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDepthFunc(GL_ALWAYS);
+
+		glUseProgram(bloomProg);
+
+		GLuint swLoc, shLoc, sampLoc, osLoc, iLoc, msaaLoc, numSamplesLoc;
+		swLoc = glGetUniformLocation(bloomProg, "sWidth");
+		shLoc = glGetUniformLocation(bloomProg, "sHeight");
+		sampLoc = glGetUniformLocation(bloomProg, "sampleNum");
+		osLoc = glGetUniformLocation(bloomProg, "offsetScale");
+		iLoc = glGetUniformLocation(bloomProg, "intensity");
+		msaaLoc = glGetUniformLocation(bloomProg, "msaa");
+		numSamplesLoc = glGetUniformLocation(bloomProg, "numSamples");
+
+		glUniform1i(swLoc, dWidth);
+		glUniform1i(shLoc, dHeight);
+		glUniform1i(msaaLoc, antialiased);
+		glUniform1i(sampLoc, bloomSize);
+		glUniform1i(numSamplesLoc, MSAASamples);
+		glUniform1f(osLoc, bloomOffsetScale);
+		glUniform1f(iLoc, intensity);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, btex);
+
+		if (antialiased) {
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, ttex);
+		}
+		else {
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, ttex);
+		}
+
+		glBindVertexArray(planeVAO);
+		CHECK_GL_ERRORS;
+
+		glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+		CHECK_GL_ERRORS;
+
+		glDrawArrays(GL_QUADS, 0, 4);
+		CHECK_GL_ERRORS;
+
+		if (!antialiased) {
+			SwapBuffers(glContextHDC);
+		}
+
+		/* */
 		memset(lpBits, 0, 4 * bufferWidth * bufferHeight);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -552,8 +543,26 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int d
 		}
 
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-	
 
+		++dx;
+		dx = dx % numPBOs;
+
+		numDownloads++;
+		if (numDownloads == 200000) {
+			numDownloads = numPBOs;
+		}
+
+		return dt;
+	}
+
+	return 0;
+}
+
+void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int destPosY) {
+	if (initialized) {
+		static HBITMAP hbmp;
+		static HDC hdcMem;
+		static HGDIOBJ hOld;
 
 		BITMAPINFOHEADER bih = { 0 };
 		bih.biSize = sizeof(BITMAPINFOHEADER);
@@ -577,14 +586,6 @@ void display(HDRAWDIB hdd, HDC hdc, int dWidth, int dHeight, int destPosX, int d
 			0, 0, // source pos 
 			bufferWidth, bufferHeight, // source size
 			NULL);
-		 
-		++dx;
-		dx = dx % numPBOs;
-
-		numDownloads++;
-		if (numDownloads == 200000) {
-			numDownloads = numPBOs;
-		}
 	}
 }
 
