@@ -30,27 +30,22 @@ float bloomOffsetScale = 4.0f;
 float intensity = 4.0f;
 
 int bufferWidth, bufferHeight;
+unsigned char* lpBits = NULL;
+
 GLuint prog, skyboxProg, blurProg, ssaaProg, bloomProg;
-GLuint rbo, tcb;
+GLuint framebuffer, rbo, tcb;
 GLuint brbo, bfbo, btex;
 GLuint trbo, tfbo, ttex;
 
-GLuint planeVAO, planeVBO;
-
-int numPBOs = 3;
+int numPBOs = 2;
 GLuint* pbo = NULL;
-GLuint framebuffer = 0;
 
+GLuint planeVAO, planeVBO;
 GLuint skyboxTexture;
-
 drawable skybox = { 0 };
 drawable model = { 0 };
 
-unsigned char* lpBits = NULL;
-
 int initialized = 0;
-
-mat4f perspectiveMatrix = { 0 };
 
 HDC glContextHDC;
 void use_rc(HDC* hdc, HGLRC* hrc) {
@@ -166,19 +161,21 @@ void init(int width, int height) {
 		GL_RENDERBUFFER,
 		brbo);
 
+
+	/* generate temp buffers-- used for rendering scene w/o any post processing */
+	glGenTextures(1, &ttex);
+	glGenRenderbuffers(1, &trbo);
+	glGenFramebuffers(1, &tfbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, trbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
 	if (antialiased) {
-		/* generate temp buffers */
-		glGenTextures(1, &ttex);
+		
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, ttex);
 		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAASamples, GL_RGB, width, height, GL_TRUE);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
-		glGenRenderbuffers(1, &trbo);
-		glBindRenderbuffer(GL_RENDERBUFFER, trbo);
 		glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAASamples, GL_DEPTH24_STENCIL8, width, height);
 
-		glGenFramebuffers(1, &tfbo);
-		glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER,
 			GL_COLOR_ATTACHMENT0,
@@ -190,12 +187,8 @@ void init(int width, int height) {
 			GL_DEPTH_ATTACHMENT,
 			GL_RENDERBUFFER,
 			trbo);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 	else {
-		/* generate temp buffers */
-		glGenTextures(1, &ttex);
 		glBindTexture(GL_TEXTURE_2D, ttex);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -204,13 +197,9 @@ void init(int width, int height) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		glGenRenderbuffers(1, &trbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, trbo);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-		glGenFramebuffers(1, &tfbo);
-		glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER,
 			GL_COLOR_ATTACHMENT0,
@@ -222,12 +211,11 @@ void init(int width, int height) {
 			GL_DEPTH_ATTACHMENT,
 			GL_RENDERBUFFER,
 			trbo);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
-	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	/* generate plane vertex object */
+
+	/* generate plane vertex object for rendering the whole scene onto a texture */
 	glGenVertexArrays(1, &planeVAO);
 	glBindVertexArray(planeVAO);
 
@@ -242,7 +230,8 @@ void init(int width, int height) {
 	};
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vec2f) * 4, qPositions, GL_STATIC_DRAW);
 
-	/* generate the framebuffer that's read from onto the screen */
+
+	/* generate the framebuffer that's read from onto the screen-- this framebuffer is the last framebuffer in this rendering pipeline */
 	glGenFramebuffers(1, &framebuffer);
 
 	glGenTextures(1, &tcb); // texture color buffer
@@ -295,6 +284,7 @@ void draw_skybox(mat4f perspectiveMatrix) {
 }
 
 float draw(int dWidth, int dHeight) {
+	static mat4f perspectiveMatrix;
 	float dt = timer_reset(&t);
 	onFrame(dt);
 

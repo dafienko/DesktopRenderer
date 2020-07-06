@@ -47,7 +47,6 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	else {
 		wndSize = (vec2i){ sWidth / scale, sHeight / scale };
 	}
-	
 
 	hMainWnd = create_independent_window(L"Main Window", &wndSize, NULL, &wndClass);
 
@@ -68,13 +67,11 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		ShowWindow(hMainWnd, nShowCmd);
 	}
 
-
 	hdd = DrawDibOpen();
 	if (hdd == NULL) {
 		error("Couldn't init a drawdib");
 	}
 	
-
 	programInit();
 
 	int exitCode = run_message_loop();
