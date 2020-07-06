@@ -17,6 +17,20 @@ HWND hMainWnd, hOpenglWnd;
 
 #define RENDER_TO_WINDOW 0
 
+int biggestWidth, biggestHeight;
+
+BOOL compare_monitor_dimensions(HMONITOR hMonitor, HDC hdc, LPRECT pRect, LPARAM lParam) {
+	biggestWidth = max(biggestWidth, pRect->right - pRect->left);
+	biggestHeight = max(biggestHeight, pRect->bottom - pRect->top);
+}
+
+void get_biggest_monitor_size() {
+	biggestWidth = 0;
+	biggestHeight = 0;
+
+	EnumDisplayMonitors(NULL, NULL, compare_monitor_dimensions, NULL);
+}
+
 HDRAWDIB hdd;
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
 	WNDCLASS wndClass = { 0 };
@@ -35,17 +49,14 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	float scale = 1.0f;
 
-	int vWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-	int vHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-	int sWidth = GetSystemMetrics(SM_CXSCREEN);
-	int sHeight = GetSystemMetrics(SM_CYSCREEN);
+	get_biggest_monitor_size();
 
 	vec2i wndSize = { 0 };
 	if (RENDER_TO_WINDOW) {
 		wndSize = (vec2i){ 800, 600 };
 	}
 	else {
-		wndSize = (vec2i){ sWidth / scale, sHeight / scale };
+		wndSize = (vec2i){ biggestWidth * scale, biggestHeight * scale };
 	}
 
 	hMainWnd = create_independent_window(L"Main Window", &wndSize, NULL, &wndClass);
@@ -61,7 +72,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	GLEInit(); // must be initialized after a context has been made current
 	
-	init(wndSize.x / scale, wndSize.y / scale);
+	init(wndSize.x * scale, wndSize.y * scale);
 
 	if (RENDER_TO_WINDOW) {
 		ShowWindow(hMainWnd, nShowCmd);
@@ -143,7 +154,7 @@ int run_message_loop() {
 			lastSecond = now;
 		}	
 
-		int timeToWait = 20 - diff;
+		int timeToWait = 23 - diff;
 		if (timeToWait > 0) {
 			Sleep(timeToWait);
 		}
@@ -173,16 +184,17 @@ WNDPROC mainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-void on_paint_desktop(HDC desktopHDC) {
 
-	int vWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-	int vHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
-	int sWidth = GetSystemMetrics(SM_CXSCREEN);
-	int sHeight = GetSystemMetrics(SM_CYSCREEN);
-	
-	draw(sWidth, sHeight);
+HDC desktopHDC;
+BOOL paint_monitor(HMONITOR hMonitor, HDC hdc, LPRECT pRect, LPARAM lParam) {
+	display(hdd, desktopHDC, pRect->right - pRect->left, pRect->bottom - pRect->top, pRect->left, pRect->top);
+}
 
-	display(hdd, desktopHDC, sWidth, sHeight, 0, 0);
-	display(hdd, desktopHDC, sWidth, sHeight, sWidth, 0);
+void on_paint_desktop(HDC dHDC) {
+	desktopHDC = dHDC;
+
+	draw(biggestWidth, biggestHeight);
+
+	EnumDisplayMonitors(NULL, NULL, paint_monitor, NULL);
 }

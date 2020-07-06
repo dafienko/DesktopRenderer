@@ -397,6 +397,8 @@ float draw(int dWidth, int dHeight) {
 		float dt = timer_reset(&t);
 		onFrame(dt);
 
+		glViewport(0, 0, bufferWidth, bufferHeight);
+
 		// calculate universal matrices for this frame
 		static mat4f cameraMatrix;
 
@@ -481,8 +483,8 @@ float draw(int dWidth, int dHeight) {
 		msaaLoc = glGetUniformLocation(bloomProg, "msaa");
 		numSamplesLoc = glGetUniformLocation(bloomProg, "numSamples");
 
-		glUniform1i(swLoc, dWidth);
-		glUniform1i(shLoc, dHeight);
+		glUniform1i(swLoc, bufferWidth);
+		glUniform1i(shLoc, bufferHeight);
 		glUniform1i(msaaLoc, antialiased);
 		glUniform1i(sampLoc, bloomSize);
 		glUniform1i(numSamplesLoc, MSAASamples);
