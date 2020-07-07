@@ -85,6 +85,7 @@ void GLEInit() {
     glDeleteBuffers = (PFNGLDELETEBUFFERSPROC)getProc("glDeleteBuffers");
     glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)getProc("glDeleteVertexArrays");
     glRenderbufferStorageMultisample = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)getProc("glRenderbufferStorageMultisample");
+    glDeleteProgram = (PFNGLDELETEPROGRAMPROC)getProc("glDeleteProgram");
 
     initialized = 1;
 }

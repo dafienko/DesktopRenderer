@@ -52,8 +52,8 @@ vec3f vector_add_3f(const vec3f a, const vec3f b) {
 vec3f vector_sub_3f(const vec3f a, const vec3f b) {
 	return (vec3f) {
 		a.x - b.x,
-			a.y - b.y,
-			a.z - b.z
+		a.y - b.y,
+		a.z - b.z
 	};
 }
 
@@ -79,7 +79,7 @@ float vector_dot_3f(const vec3f a, const vec3f b) {
 
 vec3f vector_cross_3f(const vec3f a, const vec3f b) {
 	return (vec3f) {
-		a.y * b.z + a.z * b.y,
+		a.y * b.z - a.z * b.y,
 		a.z * b.x - a.x * b.z,
 		a.x * b.y - a.y * b.x
 	};
@@ -109,6 +109,15 @@ vec3f inverse_vec3f(const vec3f a) {
 	return (vec3f) { -a.x, -a.y, -a.z };
 }
 
+vec3f cross_vec3f(const vec3f a, const vec3f b) {
+	vec3f r = { 0 };
+
+	r.x = a.y * b.z - a.z * b.y;
+	r.y = a.z * b.x - a.x * b.z;
+	r.z = a.x * b.y - a.y * b.x;
+
+	return r;
+}
 
 /* vec4 stuff */
 vec4f vector_add_4f(const vec4f a, const vec4f b) {

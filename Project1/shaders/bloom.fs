@@ -36,7 +36,7 @@ void main() {
 	
 	///*
 	if (msaa == 0) {
-		color = texture(tex, texPos);
+		color += texture(tex, texPos);
 	} else {
 		texPos = vec2((pos.x + 1) / 2,  (pos.y + 1) / 2) * vec2(sWidth, sHeight);
 		vec4 texelColor = vec4(0);

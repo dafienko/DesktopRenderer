@@ -28,12 +28,12 @@ int MSAASamples = 2;
 float threshold = .7f;
 int bloomSize = 9;
 float bloomOffsetScale = 1.6f;
-float intensity = 1;
+float intensity = 3;
 
 int bufferWidth, bufferHeight;
 unsigned char* lpBits = NULL;
 
-GLuint prog, skyboxProg, blurProg, ssaaProg, bloomProg, gskyboxProg;
+GLuint prog, skyboxProg, blurProg, bloomProg, gskyboxProg;
 GLuint framebuffer, rbo, tcb;
 GLuint brbo, bfbo, btex;
 GLuint trbo, tfbo, ttex;
@@ -95,11 +95,6 @@ void init(int width, int height) {
 	GLuint bshaders[] = { bvs, bfs };
 	blurProg = create_program(bshaders, 2);
 
-	GLuint ssvs = create_vertex_shader("shaders\\ssaa.vs");
-	GLuint ssfs = create_fragment_shader("shaders\\ssaa.fs");
-	GLuint ssshaders[] = { ssvs, ssfs };
-	ssaaProg = create_program(ssshaders, 2);
-
 	GLuint sbvs = create_vertex_shader("shaders\\skybox.vs");
 	GLuint sbfs = create_fragment_shader("shaders\\skybox.fs");
 	GLuint skyboxShaders[] = { sbvs, sbfs };
@@ -121,7 +116,7 @@ void init(int width, int height) {
 	skybox.hProgram = gskyboxProg;
 	skyboxOM.position = (vec3f){ 0, 0, 0 };
 	skyboxOM.rotation = (vec3f){ 0, 0, 0 };
-	skyboxOM.scale = (vec3f){ 10, 10, 10 };
+	skyboxOM.scale = (vec3f){ 100, 100, 100 };
 
 	timer_start(&t);
 
@@ -359,7 +354,7 @@ void edit_mesh_mtl_data(HMESH hMesh, mtllib mlib, int* groupBounds, int numGroup
 	drawable* d = (meshes + hMesh);
 
 	d->materialBounds = groupBounds;
-	d->numMaterials = numGroups - 1;
+	d->numMaterials = numGroups;
 	d->materials = mlib;
 }
 
@@ -431,14 +426,12 @@ float draw(int dWidth, int dHeight) {
 			object_model om = *(objectModels + i);
 			drawable d = *(meshes + (int)om.hModel);
 
-			d.bloomThreshold = threshold;
-
 			glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
 			glUniform3f(bgcLoc, backgroundColor.x, backgroundColor.y, backgroundColor.z);
 			glUniform1i(skyboxLoc, skyboxTexture);
 
+			d.bloomThreshold = threshold;
 			draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
-			d.bloomThreshold = 0;
 		}
 
 		/* render normal scene to temp fbo */
@@ -462,6 +455,7 @@ float draw(int dWidth, int dHeight) {
 			object_model om = *(objectModels + i);
 			drawable d = *(meshes + (int)om.hModel);
 
+			d.bloomThreshold = 0;
 			draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
 		}
 
@@ -554,6 +548,8 @@ float draw(int dWidth, int dHeight) {
 			numDownloads = numPBOs;
 		}
 
+		CHECK_GL_ERRORS;
+
 		return dt;
 	}
 
@@ -595,4 +591,31 @@ void end() {
 	free(lpBits);
 
 	free_drawable(&skybox);
+
+	for (int i = 0; i < numMeshes; i++) {
+		free_drawable(meshes + i);
+		CHECK_GL_ERRORS;
+	}
+
+	free(meshes);
+	free(objectModels);
+
+	glDeleteBuffers(1, &framebuffer);
+	glDeleteBuffers(1, &rbo);
+	glDeleteBuffers(numPBOs, pbo);
+	glDeleteTextures(1, &tcb);
+
+	glDeleteBuffers(1, &brbo);
+	glDeleteBuffers(1, &bfbo);
+	glDeleteTextures(1, &btex);
+
+	glDeleteBuffers(1, &trbo);
+	glDeleteBuffers(1, &tfbo);
+	glDeleteTextures(1, &ttex);
+
+	glDeleteProgram(prog);
+	glDeleteProgram(skyboxProg);
+	glDeleteProgram(gskyboxProg);
+	glDeleteProgram(blurProg);
+	glDeleteProgram(bloomProg);
 }

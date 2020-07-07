@@ -55,6 +55,7 @@ vec3f normalize_3f(const vec3f a);
 float* get_vals_vec3f(const vec3f a);
 int vec3f_equal(const vec3f a, const vec3f b);
 vec3f inverse_vec3f(const vec3f a);
+vec3f cross_vec3f(const vec3f a, const vec3f b);
 
 /* vec4f stuff */
 vec4f vector_add_4f(const vec4f a, const vec4f b);

@@ -17,6 +17,8 @@ void check_shader_compile_errors(GLuint hShader) {
 		MessageBoxA(NULL, log, "Shader Compilation Error", MB_OK);
 
 		free(log);
+
+		exit(69);
 	}
 }
 
@@ -34,6 +36,8 @@ void check_program_link_errors(GLuint hProgram) {
 		MessageBoxA(NULL, log, "Shader Compilation Error", MB_OK);
 
 		free(log);
+
+		exit(69);
 	}
 }
 

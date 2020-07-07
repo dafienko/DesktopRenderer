@@ -89,11 +89,11 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	programClose();
 
+	end();
+
 	wglMakeCurrent(NULL, NULL);
 	ReleaseDC(hdc, hOpenglWnd);
 	wglDeleteContext(hrc);
-
-	end();
 
 	return exitCode;
 }

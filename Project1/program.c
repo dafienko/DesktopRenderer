@@ -22,19 +22,21 @@ float rad(float d) {
     return d * (PI / 180.0f);
 }
 
-int width = 35;
-int length = 50;
-float lineWidth = 2.0f;
-float scale = 40.0f;
+int width = 35; // 35
+int length = 50; // 50
+float lineWidth = 3.0f;
+float scale = 50.0f;
 float heightFactor = 500.0f;
 float eqFactor = .15f;
 
 vec3f* positions;
+vec3f* normals;
 HMESH hMesh;
 object_model* om;
 
+#define FILL_QUADS 1
+
 float get_y_pos(int x, int z) {
-    //float y = sinf(x * eqFactor) * cosf(z * eqFactor) * heightFactor;
     float y = perlin2d(x * eqFactor, z * eqFactor, 1, 4);
 
     float edgeValue = fabs(x - ((width - 1.0f) / 2.0f)) / ((width - 1.0f) / 2.0f); // 1 is right next to an edge, 0 is right in the middle
@@ -43,7 +45,50 @@ float get_y_pos(int x, int z) {
 
     y *= edgeFactor;
 
+    y += max(0, perlin2d(x * eqFactor * 5, z * eqFactor * 5, 1, 1) - .6f) * heightFactor * .08;
+
     return y;
+}
+
+void update_normals() {
+    for (int z = 0; z < length; z++) {
+        for (int x = 0; x < width; x++) {
+            int thisIndex = 4 * (z * width + x);
+            if (z > 0 && z < length - 1 && x > 0 && x < width - 1) {
+                vec3f thisPos = *(positions + thisIndex);
+
+                int topIndex = 4 * ((z + 1) * width + x + 0);
+                int bottomIndex = 4 * ((z - 1) * width + x + 0);
+                int rightIndex = 4 * ((z + 0) * width + x + 1);
+                int leftIndex = 4 * ((z + 0) * width + x - 1);
+
+                vec3f topPos = *(positions + topIndex);
+                vec3f bottomPos = *(positions + bottomIndex);
+                vec3f rightPos = *(positions + rightIndex);
+                vec3f leftPos = *(positions + leftIndex);
+
+                vec3f up = vector_sub_3f(topPos, thisPos);
+                vec3f down = vector_sub_3f(bottomPos, thisPos);
+                vec3f right = vector_sub_3f(rightPos, thisPos);
+                vec3f left = vector_sub_3f(leftPos, thisPos);
+
+                vec3f topRightNormal = normalize_3f(vector_cross_3f(right, up));
+                vec3f topLeftNormal = normalize_3f(vector_cross_3f(up, left));
+                vec3f bottomRightNormal = normalize_3f(vector_cross_3f(down, right));
+                vec3f bottomLeftNormal = normalize_3f(vector_cross_3f(left, down));
+
+                *(normals + thisIndex + 0) = topLeftNormal;
+                *(normals + thisIndex + 1) = topRightNormal;
+                *(normals + thisIndex + 2) = bottomLeftNormal;
+                *(normals + thisIndex + 3) = bottomRightNormal;
+            } else {
+                vec3f n = (vec3f){ 0, 1, 0 };
+                for (int i = 0; i < 4; i++) {
+                    *(normals + thisIndex + i) = n;
+                }
+            }
+        }
+    }
 }
 
 void programInit() {
@@ -59,12 +104,17 @@ void programInit() {
     */
 
     int numLines = width * (length - 1) + length * (width - 1);
-    
-    vec3f* normals = calloc(width * length * 4, sizeof(vec3f));
-    int* indices = calloc(width * length * 4 + 4 * numLines, sizeof(int));
-    positions = calloc(width * length * 4, sizeof(vec3f));
+    int numFills = (width - 1) * (length - 1);
 
-    vec3f normal = (vec3f){ 0, 1, 0 };
+    normals = calloc(width * length * 4, sizeof(vec3f));
+    int* indices;
+    if (FILL_QUADS) {
+        indices = calloc(width * length * 4 + 4 * numLines + 4 * numFills, sizeof(int));
+    }
+    else {
+        indices = calloc(width * length * 4 + 4 * numLines, sizeof(int));
+    }
+    positions = calloc(width * length * 4, sizeof(vec3f));
 
     float loffMid = lineWidth / 2.0f;
 
@@ -76,7 +126,7 @@ void programInit() {
             offset *= 4;
 
             vec3f pos = (vec3f){ x * scale, get_y_pos(x, z), -z * scale };
-            
+
             *(positions + offset + 0) = vector_add_3f(pos, (vec3f) { -loffMid, 0, -loffMid }); // topLeft
             *(positions + offset + 1) = vector_add_3f(pos, (vec3f) { loffMid, 0, -loffMid }); // topRight
             *(positions + offset + 2) = vector_add_3f(pos, (vec3f) { -loffMid, 0, loffMid }); // bottomLeft
@@ -90,19 +140,15 @@ void programInit() {
             indexNum++;
             *(indices + indexNum) = offset + 1;
             indexNum++;
-
-            for (int i = 0; i < 4; i++) {
-                *(normals + offset + i) = normal;
-            }
         }
     }
 
-    
-   
+    update_normals();
+
     for (int z = 0; z < length; z++) {
         for (int x = 0; x < width; x++) {
             int thisIndex = 4 * (z * width + x);
-            
+
             // horizontal lines
             if (x < width - 1) {
                 int rightIndex = 4 * (z * width + x + 1);
@@ -130,34 +176,80 @@ void programInit() {
                 *(indices + indexNum) = bottomIndex + 1;
                 indexNum++;
             }
+
+
         }
     }
 
-    int* groupData = calloc(2, sizeof(int));
-    *(groupData + 1) = width * length * 4 + numLines * 4;
+    if (FILL_QUADS) {
+        for (int x = 0; x < width - 1; x++) {
+            for (int z = 1; z < length; z++) {
+                int thisIndex = 4 * (z * width + x);
 
-    mtllib_material mat = { 0 };
-    mat.material.ambient = (vec3f){ 0, .5, 1 };
-    mat.material.diffuse = (vec3f){ 0, 0, 1 };
-    mat.material.emitter = 1;
-    mat.materialName = calloc(2, sizeof(char));
+                int bottomIndex = 4 * ((z - 1) * width + x);
+                int rightIndex = 4 * (z * width + x + 1);
+                int diagIndex = 4 * ((z - 1) * width + x + 1);
+
+                *(indices + indexNum) = thisIndex + 3;
+                indexNum++;
+                *(indices + indexNum) = bottomIndex + 1;
+                indexNum++;
+                *(indices + indexNum) = diagIndex + 0;
+                indexNum++;
+                *(indices + indexNum) = rightIndex + 2;
+                indexNum++;
+
+            }
+        }
+    }
+
+    int* groupData;
+
+    if (FILL_QUADS) {
+        groupData = calloc(3, sizeof(int));
+        *(groupData + 1) = width * length * 4 + numLines * 4;
+        *(groupData + 2) = width * length * 4 + numLines * 4 + 4 * numFills;
+    }
+    else {
+        groupData = calloc(2, sizeof(int));
+        *(groupData + 1) = width * length * 4 + numLines * 4;
+    }
+
+    mtllib_material edgeMat = { 0 };
+    edgeMat.material.ambient = (vec3f){ .15, .5, 1 };
+    edgeMat.material.diffuse = (vec3f){ 0, 0, 0 };
+    edgeMat.material.emitter = 1;
+    edgeMat.materialName = calloc(2, sizeof(char));
 
     mtllib mlib = { 0 };
     mlib.materials = calloc(1, sizeof(mtllib_material));
     mlib.numMaterials = 1;
-    *(mlib.materials) = mat;
+    *(mlib.materials) = edgeMat;
+    
+    if (FILL_QUADS) {
+        mtllib_material fillMat = { 0 };
+        fillMat.material.ambient = (vec3f){ 0, 0, 0 };
+        fillMat.material.diffuse = (vec3f){ 0, 0, .6 };
+        fillMat.material.specular = (vec3f){ 0, 0, 0 };
+        fillMat.material.emitter = 0;
+        fillMat.materialName = calloc(2, sizeof(char));
+
+        mlib.numMaterials = 2;
+        mlib.materials = realloc(mlib.materials, 2 * sizeof(mtllib_material));
+        *(mlib.materials + 1) = fillMat;
+    }
 
     hMesh = init_dynamic_mesh(GL_QUADS);
-    edit_mesh_indices(hMesh, indices, width * length * 4 + numLines * 4);
+    int numIndices = *(groupData + mlib.numMaterials);
+    edit_mesh_indices(hMesh, indices, numIndices);
     edit_mesh_positions(hMesh, positions, width * length * 4);
     edit_mesh_normals(hMesh, normals, width * length * 4);
-    edit_mesh_mtl_data(hMesh, mlib, groupData, 2);
+    edit_mesh_mtl_data(hMesh, mlib, groupData, mlib.numMaterials);
 
     glLineWidth(5.0f);
     om = create_model_from_mesh(hMesh);
     om->visible = 1;
 
-    free(normals);
     free(indices);
 
     currentCamera.position = (vec3f){ 0, 80.0f, 0 };
@@ -254,6 +346,7 @@ void onFrame(float dt) {
 
     totalTime += dt;
  
+    ///*
     float offset = fmod(totalTime, timePerMove) / timePerMove;
     int pos = floor(totalTime / timePerMove);
     if (pos > lastPos) {
@@ -275,12 +368,19 @@ void onFrame(float dt) {
             }
         }
 
+        if (FILL_QUADS) {
+            update_normals();
+        }
+
         edit_mesh_positions(hMesh, positions, width * length * 4);
+        edit_mesh_normals(hMesh, normals, width * length * 4);
     }
 
     om->position = (vec3f){-(width - 1) * scale * .5f, 0, offset * scale};
+    //*/
 }
 
 void programClose() {
     free(positions);
+    free(normals);
 }
