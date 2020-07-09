@@ -229,7 +229,7 @@ void programInit() {
     if (FILL_QUADS) {
         mtllib_material fillMat = { 0 };
         fillMat.material.ambient = (vec3f){ 0, 0, 0 };
-        fillMat.material.diffuse = (vec3f){ 0, 0, .6 };
+        fillMat.material.diffuse = (vec3f){ 0, 0, 0 };
         fillMat.material.specular = (vec3f){ 0, 0, 0 };
         fillMat.material.emitter = 0;
         fillMat.materialName = calloc(2, sizeof(char));

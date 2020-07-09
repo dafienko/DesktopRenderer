@@ -3,7 +3,7 @@
 #include "glExtensions.h"
 #include "errors.h"
 
-void check_shader_compile_errors(GLuint hShader) {
+void check_shader_compile_errors(GLuint hShader, const char* shaderName) {
 	GLint compiled = 0;
 	glGetShaderiv(hShader, GL_COMPILE_STATUS, &compiled);
 	
@@ -14,7 +14,7 @@ void check_shader_compile_errors(GLuint hShader) {
 		char* log = calloc(logSize, sizeof(char));
 		glGetShaderInfoLog(hShader, logSize, &logSize, log);
 
-		MessageBoxA(NULL, log, "Shader Compilation Error", MB_OK);
+		MessageBoxA(NULL, log, shaderName, MB_OK);
 
 		free(log);
 
@@ -52,7 +52,7 @@ GLuint create_shader(const char* shaderName, GLenum shaderType) {
 	CHECK_GL_ERRORS;
 	
 	glCompileShader(hShader);
-	check_shader_compile_errors(hShader);
+	check_shader_compile_errors(hShader, shaderName);
 
 	return hShader;
 }

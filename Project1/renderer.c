@@ -22,13 +22,13 @@ float fov = 105.0f;
 
 /* MSAA settings */
 int antialiased = 1;
-int MSAASamples = 2;
+int MSAASamples = 4;
 
 /* Bloom settings */
 float threshold = .7f;
-int bloomSize = 9;
-float bloomOffsetScale = 1.6f;
-float intensity = 3;
+int bloomSize = 15;
+float bloomOffsetScale = 1.0f;
+float intensity = 3.5f;
 
 int bufferWidth, bufferHeight;
 unsigned char* lpBits = NULL;
@@ -36,6 +36,7 @@ unsigned char* lpBits = NULL;
 GLuint prog, skyboxProg, blurProg, bloomProg, gskyboxProg;
 GLuint framebuffer, rbo, tcb;
 GLuint brbo, bfbo, btex;
+GLuint brbo2, bfbo2, btex2;
 GLuint trbo, tfbo, ttex;
 
 int numPBOs = 2;
@@ -155,6 +156,37 @@ void init(int width, int height) {
 		GL_RENDERBUFFER,
 		brbo);
 
+	glGenTextures(1, &btex2);
+	glBindTexture(GL_TEXTURE_2D, btex2);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	/*
+	glGenRenderbuffers(1, &brbo2);
+	glBindRenderbuffer(GL_RENDERBUFFER, brbo2);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	*/
+
+	glGenFramebuffers(1, &bfbo2);
+	glBindFramebuffer(GL_FRAMEBUFFER, bfbo2);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER,
+		GL_COLOR_ATTACHMENT0,
+		GL_TEXTURE_2D,
+		btex2,
+		0);
+
+	/*
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+		GL_DEPTH_ATTACHMENT,
+		GL_RENDERBUFFER,
+		brbo2);
+	*/
 
 	/* generate temp buffers-- used for rendering scene w/o any post processing */
 	glGenTextures(1, &ttex);
@@ -383,6 +415,19 @@ void draw_skybox(mat4f perspectiveMatrix) {
 	draw_model(&skyboxOM, &skybox, perspectiveMatrix, cameraMatrix, skyboxTexture);
 }
 
+void draw_plane() {
+	glBindVertexArray(planeVAO);
+	CHECK_GL_ERRORS;
+
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	CHECK_GL_ERRORS;
+
+	glDrawArrays(GL_QUADS, 0, 4);
+	CHECK_GL_ERRORS;
+}
+
 unsigned int numDownloads = 0;
 int dx = 0;
 unsigned char* ptr;
@@ -402,6 +447,7 @@ float draw(int dWidth, int dHeight) {
 
 		perspectiveMatrix = new_perspective(5, 10000, fov, ((float)dWidth / (float)dHeight));
 
+		// render bloom highlights first
 		glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
 
 		// clear buffers
@@ -434,6 +480,56 @@ float draw(int dWidth, int dHeight) {
 			draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
 		}
 
+		// blur the bloom highlights
+		glUseProgram(blurProg);
+
+		GLuint swLoc, shLoc, sampLoc, osLoc, blurDirLoc;
+		swLoc = glGetUniformLocation(blurProg, "sWidth");
+		shLoc = glGetUniformLocation(blurProg, "sHeight");
+		sampLoc = glGetUniformLocation(blurProg, "sampleNum");
+		osLoc = glGetUniformLocation(blurProg, "offsetScale");
+		blurDirLoc = glGetUniformLocation(blurProg, "blurDir");
+
+		glUniform1i(swLoc, bufferWidth);
+		glUniform1i(shLoc, bufferHeight);
+		glUniform1i(sampLoc, bloomSize);
+		glUniform1f(osLoc, bloomOffsetScale);
+		glUniform2f(blurDirLoc, 1, 0); // horizontal blur first
+
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, btex);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, bfbo2);
+		glClearColor(0, 0, 0, 0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_ALWAYS);
+		draw_plane();
+
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, btex2);
+
+		glUniform2f(blurDirLoc, 0, 1); // vertical blur second
+
+		// override original threshold-only image with fully blurred image
+		glBindFramebuffer(GL_FRAMEBUFFER, bfbo);
+		glClearColor(0, 0, 0, 0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_ALWAYS);
+		draw_plane();
+
+
 		/* render normal scene to temp fbo */
 		glBindFramebuffer(GL_FRAMEBUFFER, tfbo);
 
@@ -459,6 +555,7 @@ float draw(int dWidth, int dHeight) {
 			draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
 		}
 
+
 		/* combine the temp fbo and the bloom fbo */
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
@@ -467,22 +564,15 @@ float draw(int dWidth, int dHeight) {
 		glDepthFunc(GL_ALWAYS);
 
 		glUseProgram(bloomProg);
-
-		GLuint swLoc, shLoc, sampLoc, osLoc, iLoc, msaaLoc, numSamplesLoc;
+		GLuint msaaLoc, numSamplesLoc, iLoc;
+		msaaLoc = glGetUniformLocation(bloomProg, "msaa");
 		swLoc = glGetUniformLocation(bloomProg, "sWidth");
 		shLoc = glGetUniformLocation(bloomProg, "sHeight");
-		sampLoc = glGetUniformLocation(bloomProg, "sampleNum");
-		osLoc = glGetUniformLocation(bloomProg, "offsetScale");
 		iLoc = glGetUniformLocation(bloomProg, "intensity");
-		msaaLoc = glGetUniformLocation(bloomProg, "msaa");
-		numSamplesLoc = glGetUniformLocation(bloomProg, "numSamples");
-
+		
+		glUniform1i(msaaLoc, antialiased ? MSAASamples : 0);
 		glUniform1i(swLoc, bufferWidth);
 		glUniform1i(shLoc, bufferHeight);
-		glUniform1i(msaaLoc, antialiased);
-		glUniform1i(sampLoc, bloomSize);
-		glUniform1i(numSamplesLoc, MSAASamples);
-		glUniform1f(osLoc, bloomOffsetScale);
 		glUniform1f(iLoc, intensity);
 
 		glActiveTexture(GL_TEXTURE2);
@@ -497,16 +587,7 @@ float draw(int dWidth, int dHeight) {
 			glBindTexture(GL_TEXTURE_2D, ttex);
 		}
 
-		glBindVertexArray(planeVAO);
-		CHECK_GL_ERRORS;
-
-		glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-		CHECK_GL_ERRORS;
-
-		glDrawArrays(GL_QUADS, 0, 4);
-		CHECK_GL_ERRORS;
+		draw_plane();
 
 		if (!antialiased) {
 			SwapBuffers(glContextHDC);
@@ -608,6 +689,10 @@ void end() {
 	glDeleteBuffers(1, &brbo);
 	glDeleteBuffers(1, &bfbo);
 	glDeleteTextures(1, &btex);
+
+	glDeleteBuffers(1, &brbo2);
+	glDeleteBuffers(1, &bfbo2);
+	glDeleteTextures(1, &btex2);
 
 	glDeleteBuffers(1, &trbo);
 	glDeleteBuffers(1, &tfbo);

@@ -6,6 +6,7 @@
 #include "assetLoader.h"
 #include <Vfw.h>
 #include "timer.h"
+#include <stdlib.h>
 
 #pragma comment(lib, "Vfw32.lib")
 
@@ -154,7 +155,7 @@ int run_message_loop() {
 			lastSecond = now;
 		}	
 
-		int timeToWait = 23 - diff;
+		int timeToWait = (1000 / 60) - diff;
 		if (timeToWait > 0) {
 			Sleep(timeToWait);
 		}
