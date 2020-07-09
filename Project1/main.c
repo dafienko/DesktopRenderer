@@ -84,7 +84,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		error("Couldn't init a drawdib");
 	}
 	
-	programInit();
+	programInit(lpCmdLine);
 
 	int exitCode = run_message_loop();
 

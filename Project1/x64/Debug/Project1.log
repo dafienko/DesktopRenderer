@@ -16,6 +16,28 @@ C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(136,42): warning C4267: '
 C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(185,49): warning C4047: 'return': 'WNDPROC' differs in levels of indirection from 'LRESULT'
 C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(200,53): warning C4047: 'function': 'LPARAM' differs in levels of indirection from 'void *'
 C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(200,53): warning C4024: 'EnumDisplayMonitors': different types for formal and actual parameter 4
+  program.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(47,31): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(47,34): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(48,32): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(48,35): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(39,1): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(40,1): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(23,29): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(49,95): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(43,1): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(105,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(106,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(107,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(99,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(311,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(312,51): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(315,49): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(316,61): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(317,62): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(373,1): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(374,1): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  Generating Code...
 C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(26): warning C4716: 'compare_monitor_dimensions': must return a value
 C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(193): warning C4716: 'paint_monitor': must return a value
   Project1.vcxproj -> C:\Users\dafie\source\repos\GLTesting4\x64\Debug\DesktopRenderer.exe

@@ -18,6 +18,7 @@ timer t = { 0 };
 /* general settings */
 vec3f lightDir = { 0, -.2f, 1 };
 vec3f backgroundColor = { 1, 0, 0 };
+vec3f sunColor = { 0, 0, 0 };
 float fov = 105.0f;
 
 /* MSAA settings */
@@ -65,6 +66,10 @@ void use_rc(HDC* hdc, HGLRC* hrc) {
 	if (success == FALSE) {
 		CHECK_ERRORS;
 	}
+}
+
+void set_sun_color(float r, float g, float b) {
+	sunColor = (vec3f){ r, g, b };
 }
 
 void set_fov(const float newFov) {
@@ -410,7 +415,7 @@ void draw_skybox(mat4f perspectiveMatrix) {
 	
 	glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
 	glUniform3f(bgcLoc, backgroundColor.x, backgroundColor.y, backgroundColor.z);
-	glUniform3f(scLoc, 0.0f, .5f, 1.0f);
+	glUniform3f(scLoc, sunColor.x, sunColor.y, sunColor.z);
 	
 	draw_model(&skyboxOM, &skybox, perspectiveMatrix, cameraMatrix, skyboxTexture);
 }

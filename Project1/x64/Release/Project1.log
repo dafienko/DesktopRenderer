@@ -1,4 +1,41 @@
 ﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(459,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (Project1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  main.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(32,66): warning C4047: 'function': 'LPARAM' differs in levels of indirection from 'void *'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(32,66): warning C4024: 'EnumDisplayMonitors': different types for formal and actual parameter 4
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(39,36): warning C4047: '=': 'WNDPROC' differs in levels of indirection from 'WNDPROC (__cdecl *)(HWND,UINT,WPARAM,LPARAM)'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(76,24): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(76,43): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(84,8): warning C4013: 'error' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(89,33): warning C4013: 'run_message_loop' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(96,15): warning C4133: 'function': incompatible types - from 'HDC' to 'HWND'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(96,27): warning C4133: 'function': incompatible types - from 'HWND' to 'HDC'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(60,1): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(118,22): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(133,13): warning C4013: 'sprintf_s' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(136,42): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(185,49): warning C4047: 'return': 'WNDPROC' differs in levels of indirection from 'LRESULT'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(200,53): warning C4047: 'function': 'LPARAM' differs in levels of indirection from 'void *'
+C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(200,53): warning C4024: 'EnumDisplayMonitors': different types for formal and actual parameter 4
+  program.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(47,31): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(47,34): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(48,32): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(48,35): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(39,1): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(40,1): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(23,29): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(49,95): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(43,1): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(101,59): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(102,59): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(103,59): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(300,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(301,51): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(304,49): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(305,61): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(306,62): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(362,1): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\program.c(363,1): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
   renderer.c
 C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(542,46): warning C4020: 'draw_skybox': too many actual parameters
 C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(601,20): warning C4018: '<': signed/unsigned mismatch
@@ -6,8 +43,8 @@ C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(567,19): warning C410
 C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(667,8): warning C4047: 'function': 'UINT' differs in levels of indirection from 'void *'
 C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(667,8): warning C4024: 'DrawDibDraw': different types for formal and actual parameter 13
   Generating code
-  6 of 477 functions ( 1.3%) were compiled, the rest were copied from previous compilation.
+  3 of 477 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    6 functions had inline decision re-evaluated but remain unchanged
+    10 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\dafie\source\repos\GLTesting4\x64\Release\DesktopRenderer.exe

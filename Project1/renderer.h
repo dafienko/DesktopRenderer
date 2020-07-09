@@ -34,6 +34,7 @@ void use_rc(HDC*, HGLRC*);
 
 void set_current_skybox(GLuint skyboxTexture);
 void set_background_color(float r, float g, float b);
+void set_sun_color(float r, float g, float b);
 
 void set_fov(const float fov);
 float get_fov();

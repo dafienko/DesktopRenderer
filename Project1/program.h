@@ -1,7 +1,9 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
-void programInit();
+#include <windows.h>
+
+void programInit(LPSTR args);
 
 void onFrame(float dt);
 

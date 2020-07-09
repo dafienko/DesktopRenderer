@@ -11,6 +11,7 @@
 #include "assetLoader.h"
 #include <math.h>
 #include "perlin.h"
+#include "stringUtil.h"
 
 #ifndef PI 
 #define PI 3.14159265359
@@ -91,7 +92,29 @@ void update_normals() {
     }
 }
 
-void programInit() {
+void programInit(LPSTR args) {
+    vec3f lineColor = (vec3f){ 1, 1, 1 };
+
+    OutputDebugStringA(args);
+    int len = strlen(args);
+    if (len > 0) {
+        int numSplits = strfind(args, " ");
+        if (numSplits >= 2) {
+            vec3f argV3 = { 0 };
+            SPLITSTR components = strsplit(args, " ");
+            argV3.x = atof(*(components + 0)) / 255.0f;
+            argV3.y = atof(*(components + 1)) / 255.0f;
+            argV3.z = atof(*(components + 2)) / 255.0f;
+
+            set_sun_color(argV3.x, argV3.y, argV3.z);
+
+            lineColor = argV3;
+        }
+    }
+    else {
+        set_sun_color(1, 0, 0);
+    }
+
     //defaultSkybox = create_skybox_texture("assets/skybox.png");
     //set_current_skybox(defaultSkybox);
 
@@ -216,7 +239,7 @@ void programInit() {
     }
 
     mtllib_material edgeMat = { 0 };
-    edgeMat.material.ambient = (vec3f){ .15, .5, 1 };
+    edgeMat.material.ambient = lineColor;
     edgeMat.material.diffuse = (vec3f){ 0, 0, 0 };
     edgeMat.material.emitter = 1;
     edgeMat.materialName = calloc(2, sizeof(char));
