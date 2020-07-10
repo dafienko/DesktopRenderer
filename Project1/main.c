@@ -15,6 +15,7 @@ WNDPROC mainWndProc(HWND, UINT, WPARAM, LPARAM);
 HBITMAP hbmp;
 HDC painterDC;
 HWND hMainWnd, hOpenglWnd; 
+vec2i origin = { 0 };
 
 #define RENDER_TO_WINDOW 0
 
@@ -23,6 +24,8 @@ int biggestWidth, biggestHeight;
 BOOL compare_monitor_dimensions(HMONITOR hMonitor, HDC hdc, LPRECT pRect, LPARAM lParam) {
 	biggestWidth = max(biggestWidth, pRect->right - pRect->left);
 	biggestHeight = max(biggestHeight, pRect->bottom - pRect->top);
+	origin.x = min(pRect->left, origin.x);
+	origin.y = min(pRect->top, origin.y);
 }
 
 void get_biggest_monitor_size() {
@@ -189,7 +192,13 @@ WNDPROC mainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 HDC desktopHDC;
 BOOL paint_monitor(HMONITOR hMonitor, HDC hdc, LPRECT pRect, LPARAM lParam) {
-	display(hdd, desktopHDC, pRect->right - pRect->left, pRect->bottom - pRect->top, pRect->left, pRect->top);
+	int width = pRect->right - pRect->left;
+	int height = pRect->bottom - pRect->top;
+	int x = pRect->left - origin.x;
+	int y = pRect->top - origin.y;
+
+	display(hdd, desktopHDC, width, height, x, y);
+	return TRUE;
 }
 
 void on_paint_desktop(HDC dHDC) {
