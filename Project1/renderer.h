@@ -35,6 +35,7 @@ void use_rc(HDC*, HGLRC*);
 void set_current_skybox(GLuint skyboxTexture);
 void set_background_color(float r, float g, float b);
 void set_sun_color(float r, float g, float b);
+void set_sun_pos(float x, float y, float z);
 
 void set_fov(const float fov);
 float get_fov();
@@ -49,5 +50,7 @@ void edit_mesh_indices(HMESH hMesh, int* indices, int numIndices);
 void edit_mesh_positions(HMESH hMesh, vec3f* positions, int numPositions);
 void edit_mesh_normals(HMESH hMesh, vec3f* normals, int numNormals);
 void edit_mesh_mtl_data(HMESH hMesh, mtllib mlib, int* groupBounds, int numGroups);
+
+void set_sb_rotation(float x, float y, float z);
 
 #endif

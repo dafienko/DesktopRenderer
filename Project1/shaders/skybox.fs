@@ -6,13 +6,27 @@ in vec3 TexCoords;
 
 layout (binding=0) uniform samplerCube skybox;
 
-vec3 globalLightDir = vec3(1, -1, 0);
+uniform vec3 sunColor;
+uniform vec3 globalLightDir;
+
+
 
 void main()
 {    
     color = texture(skybox, TexCoords);
 	
+	/*
 	float sunAngle = max(0, dot(normalize(-globalLightDir), normalize(TexCoords)));
 	sunAngle = pow(sunAngle, 32);
-	color = mix(color, vec4(1), sunAngle);
+	
+	float sunSize = .8;
+	
+	if (sunAngle > sunSize) {
+		vec4 nextToSunColor = mix(color, vec4(sunColor, 1), sunSize);
+		float nextToSunAlpha = (sunAngle - sunSize) / (1 - sunSize);
+		color = mix(nextToSunColor, vec4(1), nextToSunAlpha);
+	} else {
+		color = mix(color, vec4(sunColor, 1), sunAngle);
+	}
+	*/
 }

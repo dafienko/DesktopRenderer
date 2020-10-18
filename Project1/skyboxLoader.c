@@ -68,68 +68,6 @@ GLuint create_skybox_texture(const char* filename) {
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	CHECK_GL_ERRORS;
 
-	/*
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-		0,
-		GL_RGBA,
-		skyboxFaceSize, skyboxFaceSize,
-		0,
-		GL_RGBA,
-		GL_UNSIGNED_BYTE,
-		top.lpBits);
-	CHECK_GL_ERRORS;
-
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-		0,
-		GL_RGBA,
-		skyboxFaceSize, skyboxFaceSize,
-		0,
-		GL_RGBA,
-		GL_UNSIGNED_BYTE,
-		bottom.lpBits);
-	CHECK_GL_ERRORS;
-
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
-		0,
-		GL_RGBA,
-		skyboxFaceSize, skyboxFaceSize,
-		0,
-		GL_RGBA,
-		GL_UNSIGNED_BYTE,
-		back.lpBits);
-	CHECK_GL_ERRORS;
-
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
-		0,
-		GL_RGBA,
-		skyboxFaceSize, skyboxFaceSize,
-		0,
-		GL_RGBA,
-		GL_UNSIGNED_BYTE,
-		front.lpBits);
-	CHECK_GL_ERRORS;
-
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-		0,
-		GL_RGBA,
-		skyboxFaceSize, skyboxFaceSize,
-		0,
-		GL_RGBA,
-		GL_UNSIGNED_BYTE,
-		right.lpBits);
-	CHECK_GL_ERRORS;
-
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-		0,
-		GL_RGBA,
-		skyboxFaceSize, skyboxFaceSize,
-		0,
-		GL_RGBA,
-		GL_UNSIGNED_BYTE,
-		left.lpBits);
-	CHECK_GL_ERRORS;
-	*/
-
 	free_image_bit_data(&top);
 	free_image_bit_data(&bottom);
 	free_image_bit_data(&back);

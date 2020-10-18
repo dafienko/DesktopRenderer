@@ -43,6 +43,9 @@
     <Filter Include="Source Files\zlib">
       <UniqueIdentifier>{4d32447b-f781-4bf7-a8da-373499cb50b6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\programs">
+      <UniqueIdentifier>{e3ec29f9-b18e-42cd-ac89-3a282393d0e8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -92,9 +95,6 @@
     </ClCompile>
     <ClCompile Include="drawableUtil.c">
       <Filter>Source Files\assetLoader</Filter>
-    </ClCompile>
-    <ClCompile Include="program.c">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="timer.c">
       <Filter>Source Files\timer</Filter>
@@ -212,6 +212,9 @@
     </ClCompile>
     <ClCompile Include="drawObject.c">
       <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="retroProg.c">
+      <Filter>Source Files\programs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

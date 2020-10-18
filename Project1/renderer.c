@@ -16,7 +16,7 @@
 timer t = { 0 };
 
 /* general settings */
-vec3f lightDir = { 0, -.2f, 1 };
+vec3f lightDir = { 0, -.43f, 1 };
 vec3f backgroundColor = { 1, 0, 0 };
 vec3f sunColor = { 0, 0, 0 };
 float fov = 105.0f;
@@ -84,6 +84,16 @@ void set_current_skybox(GLuint tex) {
 	skyboxTexture = tex;
 }
 
+void set_sun_pos(float x, float y, float z) {
+	lightDir.x = x;
+	lightDir.y = y;
+	lightDir.z = z;
+}
+
+void set_sb_rotation(float x, float y, float z) {
+	skyboxOM.rotation = (vec3f){ x, y, z };
+}
+
 void set_background_color(float r, float g, float b) {
 	backgroundColor = (vec3f){ r, g, b };
 }
@@ -119,7 +129,7 @@ void init(int width, int height) {
 	obj_data od = read_obj_file("models\\cube.obj", NULL);
 	skybox = obj_to_drawable(&od);
 	free_obj_data(&od);
-	skybox.hProgram = gskyboxProg;
+	skybox.hProgram = skyboxProg;
 	skyboxOM.position = (vec3f){ 0, 0, 0 };
 	skyboxOM.rotation = (vec3f){ 0, 0, 0 };
 	skyboxOM.scale = (vec3f){ 100, 100, 100 };
@@ -407,16 +417,17 @@ void draw_skybox(mat4f perspectiveMatrix) {
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-	glUseProgram(gskyboxProg);
-	static GLuint gldLoc, bgcLoc, scLoc;
-	gldLoc = glGetUniformLocation(skybox.hProgram, "globalLightDir");
-	bgcLoc = glGetUniformLocation(gskyboxProg, "backgroundColor");
-	scLoc = glGetUniformLocation(gskyboxProg, "sunColor");
-	
+	glUseProgram(skyboxProg);
+	static GLuint gldLoc, scLoc;
+	//static GLuint bgcLoc;
+	gldLoc = glGetUniformLocation(skyboxProg, "globalLightDir");
+	//bgcLoc = glGetUniformLocation(gskyboxProg, "backgroundColor");
+	scLoc = glGetUniformLocation(skyboxProg, "sunColor");
+
 	glUniform3f(gldLoc, lightDir.x, lightDir.y, lightDir.z);
-	glUniform3f(bgcLoc, backgroundColor.x, backgroundColor.y, backgroundColor.z);
+	//glUniform3f(bgcLoc, backgroundColor.x, backgroundColor.y, backgroundColor.z);
 	glUniform3f(scLoc, sunColor.x, sunColor.y, sunColor.z);
-	
+
 	draw_model(&skyboxOM, &skybox, perspectiveMatrix, cameraMatrix, skyboxTexture);
 }
 

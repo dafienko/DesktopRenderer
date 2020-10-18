@@ -2,6 +2,7 @@
 
 #include "winUtil.h"
 #include "errors.h"
+#include <wingdi.h>
 
 #pragma comment(lib, "gdi32")
 
@@ -81,20 +82,20 @@ void setup_hdc_for_opengl(HDC hdc) {
 	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 	pfd.iPixelType = PFD_TYPE_RGBA;
 	pfd.cColorBits = 32;
+	CHECK_ERRORS;
 
 	pf = ChoosePixelFormat(hdc, &pfd);
 	if (pf == 0) {
 		CHECK_ERRORS;
 		return 0;
 	}
+	SetLastError(0);
 
 	if (SetPixelFormat(hdc, pf, &pfd) == FALSE) {
 		CHECK_ERRORS;
 		return 0;
 	}
-
 	DescribePixelFormat(hdc, pf, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
-	CHECK_ERRORS;
 }
 
 HWND create_independent_opengl_window(LPCWSTR name, vec2i* size, vec2i* pos, WNDCLASS* wndClass) {
