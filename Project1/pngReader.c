@@ -10,137 +10,107 @@
 #define uint unsigned int
 
 
+// http://zarb.org/~gc/html/libpng.html
 image_bit_data read_png_file(const char* filename) {
     image_bit_data ibd = { 0 };
     
-    png_structp	png_ptr;
+    int x, y;
+
+    int width, height;
+    png_byte color_type;
+    png_byte bit_depth;
+
+    png_structp png_ptr;
     png_infop info_ptr;
-    FILE* fp;
+    int number_of_passes;
+    png_bytep* row_pointers;
 
-    int width = 0;
-    int height = 0;
-    int bitDepth = 0;
-    int colorType = 0;
+    char header[8];    // 8 is the maximum size that can be checked
 
-    fopen_s(&fp, filename, "rb");
-    if (fp == NULL) {
-        check_std_err(filename, errno);
+        /* open file and test for it being a png */
+    FILE* fp = fopen(filename, "rb");
+    if (!fp)
         return;
-    }
 
-    /* check file signature */
-    uch sig[8];
+    fread(header, 1, 8, fp);
 
-    fread(sig, 1, 8, fp);
-    if (!png_check_sig(sig, 8)) {
-        error("Invalid file signature");
+    if (png_sig_cmp(header, 0, 8))
         return;
-    }
 
 
-    /* create png structs */
+    /* initialize stuff */
     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png_ptr) {
-        error("failed to create png_struct");
+
+    if (!png_ptr)
         return;
-    }
 
     info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr) {
-        png_destroy_read_struct(&png_ptr, NULL, NULL);
-        error("failed to create info_struct");
+    if (!info_ptr)
         return;
-    }
+
+    if (setjmp(png_jmpbuf(png_ptr)))
+        return;
 
     png_init_io(png_ptr, fp);
     png_set_sig_bytes(png_ptr, 8);
+
     png_read_info(png_ptr, info_ptr);
 
-    /* get png general information */
-    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bitDepth, &colorType, NULL, NULL, NULL);
+    width = png_get_image_width(png_ptr, info_ptr);
+    height = png_get_image_height(png_ptr, info_ptr);
+    color_type = png_get_color_type(png_ptr, info_ptr);
+    bit_depth = png_get_bit_depth(png_ptr, info_ptr);
 
-    /* get file background color if it exists */
-    uch bgRed = 0;
-    uch bgGreen = 0;
-    uch bgBlue = 0;
-    png_color_16p pBackground = NULL;
-    
-
-    if (png_get_bKGD(png_ptr, info_ptr, &pBackground)) {
-        if (bitDepth == 16) {
-            bgRed = pBackground->red >> 8;
-            bgGreen = pBackground->green >> 8;
-            bgBlue = pBackground->blue >> 8;
-        }
-        else if (colorType == PNG_COLOR_TYPE_GRAY && bitDepth < 8) {
-            if (bitDepth == 1)
-                bgRed = bgGreen = bgBlue = pBackground->gray ? 255 : 0;
-            else if (bitDepth == 2) /* i.e., max value is 3 */
-                bgRed = bgGreen = bgBlue = (255 / 3) * pBackground->gray;
-            else /* bitDepth == 4 */ /* i.e., max value is 15 */
-                bgRed = bgGreen;
-        }
-        else {
-            bgRed = pBackground->red;
-            bgGreen = pBackground->green;
-            bgBlue = pBackground->blue;
-        }
-    }
-
-    char* p;
-    double displayExponent = 0;
-    if ((p = getenv("SCREEN_GAMMA")) != NULL)
-        displayExponent = atof(p);
-    else
-        displayExponent = 1.0;
-
-
-
-    if (colorType == PNG_COLOR_TYPE_PALETTE)
-        png_set_expand(png_ptr);
-    if (colorType == PNG_COLOR_TYPE_GRAY && bitDepth < 8)
-        png_set_expand(png_ptr);
-    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
-        png_set_expand(png_ptr);
-
-
-    if (bitDepth == 16)
-        png_set_strip_16(png_ptr);
-    if (colorType == PNG_COLOR_TYPE_GRAY || colorType == PNG_COLOR_TYPE_GRAY_ALPHA)
-        png_set_gray_to_rgb(png_ptr);
-
-    double gamma;
-
-    if (png_get_gAMA(png_ptr, info_ptr, &gamma))
-        png_set_gamma(png_ptr, displayExponent, gamma);
-
-
-
-
-    png_uint_32 i, rowbytes;
-    png_bytepp row_pointers = calloc(height, sizeof(png_bytep));
-
+    number_of_passes = png_set_interlace_handling(png_ptr);
     png_read_update_info(png_ptr, info_ptr);
 
-    rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-    int* pChannels = (int)png_get_channels(png_ptr, info_ptr);
-    uch* imageData;
 
-    if ( (imageData = (uch*)malloc(rowbytes * height)) == NULL ) {
-        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+    /* read file */
+    if (setjmp(png_jmpbuf(png_ptr)))
         return;
-    }
 
-    for (i = 0; i < height; ++i)
-        *(row_pointers + i) = imageData + i * rowbytes;
+    row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+    for (y = 0; y < height; y++)
+        row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png_ptr, info_ptr));
 
     png_read_image(png_ptr, row_pointers);
 
-    png_read_end(png_ptr, NULL);
-    
+
+
+    png_bytep buffer = malloc(width * height * 4);
+
+    if (png_get_color_type(png_ptr, info_ptr) == PNG_COLOR_TYPE_RGB)
+        return;
+
+    if (png_get_color_type(png_ptr, info_ptr) != PNG_COLOR_TYPE_RGBA)
+        return;
+
+    for (y = 0; y < height; y++) {
+        png_byte* row = row_pointers[y];
+        for (x = 0; x < width; x++) {
+            png_byte* ptr = &(row[x * 4]);
+
+            png_byte r, g, b, a;
+            r = ptr[0];
+            g = ptr[1];
+            b = ptr[2];
+            a = ptr[3];
+
+            for (int c = 0; c < 4; c++) {
+                buffer[(y * width + x) * 4 + c] = ptr[c];
+            }
+        }
+    }
+
+    fclose(fp);
+    for (y = 0; y < height; y++)
+        free(row_pointers[y]);
+    free(row_pointers);
+
     ibd.width = width;
     ibd.height = height;
-    ibd.lpBits = imageData;
+    ibd.lpBits = buffer;
+    ibd.colorType = color_type;
 
     return ibd;
 }
@@ -159,10 +129,12 @@ image_bit_data read_png_file_simple(const char* filename) {
     {
         png_bytep buffer;
 
-        image.format = PNG_FORMAT_BGRA;
+        image.format = PNG_FORMAT_RGBA;
 
         buffer = malloc(PNG_IMAGE_SIZE(image));
         ibd.lpBits = buffer;
+
+        png_color backgroundColor = { 255u, 0, 0 };
 
         if (buffer != NULL)
             png_image_finish_read(&image, NULL, buffer, 0, NULL);
@@ -172,6 +144,7 @@ image_bit_data read_png_file_simple(const char* filename) {
 
     ibd.width = image.width;
     ibd.height = image.height;
+    ibd.colorType = PNG_FORMAT_BGRA;
     
     png_image_free(&image);
 

@@ -213,8 +213,11 @@
     <ClCompile Include="drawObject.c">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="retroProg.c">
+    <ClCompile Include="snowretroProg.c">
       <Filter>Source Files\programs</Filter>
+    </ClCompile>
+    <ClCompile Include="particleEmitter.c">
+      <Filter>Source Files\renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -261,6 +264,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="perlin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="particleEmitter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

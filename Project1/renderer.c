@@ -7,6 +7,7 @@
 #include "timer.h"
 #include "winUtil.h"
 #include "errors.h"
+#include "particleEmitter.h"
 
 #pragma comment(lib, "Vfw32.lib")
 
@@ -452,13 +453,18 @@ float draw(int dWidth, int dHeight) {
 		static mat4f perspectiveMatrix;
 		float dt = timer_reset(&t);
 		onFrame(dt);
+		updateEmitters(dt);
 
 		glViewport(0, 0, bufferWidth, bufferHeight);
 
 		// calculate universal matrices for this frame
 		static mat4f cameraMatrix;
 
-		cameraMatrix = from_position_and_rotation(inverse_vec3f(currentCamera.position), inverse_vec3f(currentCamera.rotation));
+		//cameraMatrix = from_position_and_rotation(inverse_vec3f(currentCamera.position), inverse_vec3f(currentCamera.rotation));
+		cameraMatrix = mat_mul_mat(
+			rotate_xyz(-currentCamera.rotation.x, -currentCamera.rotation.y, -currentCamera.rotation.z),
+			from_translation(-currentCamera.position.x, -currentCamera.position.y, -currentCamera.position.z)
+		);
 		cameraMatrix = mat_mul_mat(new_identity(), cameraMatrix);
 
 		perspectiveMatrix = new_perspective(5, 10000, fov, ((float)dWidth / (float)dHeight));
@@ -495,6 +501,7 @@ float draw(int dWidth, int dHeight) {
 			d.bloomThreshold = threshold;
 			draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
 		}
+		render_emitters(cameraMatrix, perspectiveMatrix, 0);
 
 		// blur the bloom highlights
 		glUseProgram(blurProg);
@@ -563,6 +570,7 @@ float draw(int dWidth, int dHeight) {
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 
+		// draw models
 		for (int i = 0; i < numObjectModels; i++) {
 			object_model om = *(objectModels + i);
 			drawable d = *(meshes + (int)om.hModel);
@@ -571,6 +579,7 @@ float draw(int dWidth, int dHeight) {
 			draw_model(&om, &d, perspectiveMatrix, cameraMatrix, skyboxTexture);
 		}
 
+		render_emitters(cameraMatrix, perspectiveMatrix, 1);
 
 		/* combine the temp fbo and the bloom fbo */
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);

@@ -27,8 +27,7 @@ image_bit_data get_image_rect(const image_bit_data src, int x, int y, int cx, in
 	return ibd;
 }
 
-GLuint create_png_texture(const char* filename) {
-	image_bit_data ibd = read_png_file_simple(filename);
+GLuint create_texture_from_ibd(const image_bit_data ibd) {
 	GLuint tex;
 
 	CHECK_GL_ERRORS;
@@ -38,16 +37,31 @@ GLuint create_png_texture(const char* filename) {
 	CHECK_GL_ERRORS;
 
 
-	
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glGenerateMipmap(GL_TEXTURE_2D);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ibd.width, ibd.height, 0, GL_BGRA, GL_UNSIGNED_BYTE, ibd.lpBits);
+	glTexImage2D(
+		GL_TEXTURE_2D,
+		0,
+		GL_RGBA,
+		ibd.width, ibd.height,
+		0,
+		GL_RGBA,
+		GL_UNSIGNED_BYTE,
+		ibd.lpBits
+	);
+
 	CHECK_GL_ERRORS;
 	free_image_bit_data(&ibd);
 	return tex;
+}
+
+GLuint create_png_texture(const char* filename) {
+	image_bit_data ibd = read_png_file_simple(filename);
+	return create_texture_from_ibd(ibd);
 }

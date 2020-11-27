@@ -34,7 +34,8 @@ mat4f rotate_xyz(float x, float y, float z) {
 }
 
 mat4f from_position_and_rotation(vec3f position, vec3f rotation) {
-    return mat_mul_mat(rotate_xyz(rotation.x, rotation.y, rotation.z), from_translation(position.x, position.y, position.z));
+    //return mat_mul_mat(rotate_xyz(rotation.x, rotation.y, rotation.z), from_translation(position.x, position.y, position.z));
+    return mat_mul_mat(from_translation(position.x, position.y, position.z), rotate_xyz(rotation.x, rotation.y, rotation.z));
 }
 
 mat4f new_identity() {

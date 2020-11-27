@@ -116,7 +116,7 @@ void programInit(LPSTR args) {
     }
    
 
-    defaultSkybox = create_skybox_texture("assets/nightsky.png");
+    defaultSkybox = create_skybox_texture("assets/nightsky2.png");
     set_current_skybox(defaultSkybox);
 
     set_background_color(0.0f, 0.0f, 0.0f);

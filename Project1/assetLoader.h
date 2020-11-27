@@ -59,6 +59,7 @@ typedef struct {
 	unsigned int width;
 	unsigned int height;
 	char* lpBits;
+	unsigned char colorType;
 } image_bit_data;
 
 lines_data get_file_lines(const char* filename);
@@ -86,5 +87,6 @@ image_bit_data get_image_rect(const image_bit_data src, int x, int y, int cx, in
 GLuint create_skybox_texture(const char* filename);
 
 GLuint create_png_texture(const char* filename);
+GLuint create_texture_from_ibd(const image_bit_data ibd);
 
 #endif

@@ -5,6 +5,21 @@ C:\Users\dafie\source\repos\GLTesting4\Project1\drawObject.c(73,104): warning C4
   drawableUtil.c
 C:\Users\dafie\source\repos\GLTesting4\Project1\drawableUtil.c(18,20): warning C4018: '<': signed/unsigned mismatch
 C:\Users\dafie\source\repos\GLTesting4\Project1\drawableUtil.c(20,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  errorUtil.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\errorUtil.c(19,8): warning C4047: 'function': 'DWORD' differs in levels of indirection from 'void *'
+C:\Users\dafie\source\repos\GLTesting4\Project1\errorUtil.c(19,4): warning C4024: 'FormatMessageA': different types for formal and actual parameter 4
+C:\Users\dafie\source\repos\GLTesting4\Project1\errorUtil.c(20,16): warning C4047: 'function': 'LPSTR' differs in levels of indirection from 'LPCSTR *'
+C:\Users\dafie\source\repos\GLTesting4\Project1\errorUtil.c(20,4): warning C4024: 'FormatMessageA': different types for formal and actual parameter 5
+C:\Users\dafie\source\repos\GLTesting4\Project1\errorUtil.c(24,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\errorUtil.c(43,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  fileUtil.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\fileUtil.c(15,65): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\fileUtil.c(35,3): warning C4033: 'get_file_lines' must return a value
+C:\Users\dafie\source\repos\GLTesting4\Project1\fileUtil.c(51,65): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\fileUtil.c(42,7): warning C4101: 'c': unreferenced local variable
+  glExtensions.c
+  imageUtil.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\imageUtil.c(60,26): warning C4090: 'function': different 'const' qualifiers
   main.c
 C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(35,66): warning C4047: 'function': 'LPARAM' differs in levels of indirection from 'void *'
 C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(35,62): warning C4024: 'EnumDisplayMonitors': different types for formal and actual parameter 4
@@ -22,42 +37,80 @@ C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(139,42): warning C4267: '
 C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(188,49): warning C4047: 'return': 'WNDPROC' differs in levels of indirection from 'LRESULT'
 C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(209,53): warning C4047: 'function': 'LPARAM' differs in levels of indirection from 'void *'
 C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(209,49): warning C4024: 'EnumDisplayMonitors': different types for formal and actual parameter 4
+  matrixMath.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\matrixMath.c(53,1): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\matrixMath.c(99,5): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\matrixMath.c(108,5): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\matrixMath.c(117,5): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  mtllibLoader.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\mtllibLoader.c(12,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\dafie\source\repos\GLTesting4\Project1\mtllibLoader.c(33,37): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\mtllibLoader.c(34,37): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\mtllibLoader.c(35,37): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\mtllibLoader.c(103,20): warning C4018: '<': signed/unsigned mismatch
+  objFileUtil.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(10,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(24,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(34,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(60,31): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(61,31): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(62,31): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(70,31): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(71,31): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(72,31): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(254,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(303,29): warning C4018: '>=': signed/unsigned mismatch
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(329,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\dafie\source\repos\GLTesting4\Project1\objFileUtil.c(339,20): warning C4018: '<': signed/unsigned mismatch
+  particleEmitter.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\particleEmitter.c(205,22): warning C4013: 'time' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\particleEmitter.c(234,35): warning C4013: 'create_vertex_shader' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\particleEmitter.c(235,37): warning C4013: 'create_fragment_shader' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\particleEmitter.c(238,31): warning C4013: 'create_program' undefined; assuming extern returning int
+C:\Users\dafie\source\repos\GLTesting4\Project1\particleEmitter.c(265,29): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+  pngReader.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\pngReader.c(33,9): warning C4033: 'read_png_file' must return a value
+C:\Users\dafie\source\repos\GLTesting4\Project1\pngReader.c(38,9): warning C4033: 'read_png_file' must return a value
+C:\Users\dafie\source\repos\GLTesting4\Project1\pngReader.c(45,9): warning C4033: 'read_png_file' must return a value
+C:\Users\dafie\source\repos\GLTesting4\Project1\pngReader.c(49,9): warning C4033: 'read_png_file' must return a value
+C:\Users\dafie\source\repos\GLTesting4\Project1\pngReader.c(52,9): warning C4033: 'read_png_file' must return a value
+C:\Users\dafie\source\repos\GLTesting4\Project1\pngReader.c(70,9): warning C4033: 'read_png_file' must return a value
+C:\Users\dafie\source\repos\GLTesting4\Project1\pngReader.c(83,9): warning C4033: 'read_png_file' must return a value
+C:\Users\dafie\source\repos\GLTesting4\Project1\pngReader.c(86,9): warning C4033: 'read_png_file' must return a value
   renderer.c
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(558,34): warning C4020: 'draw_skybox': too many actual parameters
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(617,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(583,19): warning C4101: 'numSamplesLoc': unreferenced local variable
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(683,8): warning C4047: 'function': 'UINT' differs in levels of indirection from 'void *'
-C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(683,4): warning C4024: 'DrawDibDraw': different types for formal and actual parameter 13
-  retroProg.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(565,34): warning C4020: 'draw_skybox': too many actual parameters
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(626,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(592,19): warning C4101: 'numSamplesLoc': unreferenced local variable
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(692,8): warning C4047: 'function': 'UINT' differs in levels of indirection from 'void *'
+C:\Users\dafie\source\repos\GLTesting4\Project1\renderer.c(692,4): warning C4024: 'DrawDibDraw': different types for formal and actual parameter 13
+  shaders.c
+  skyboxLoader.c
+C:\Users\dafie\source\repos\GLTesting4\Project1\skyboxLoader.c(9,1): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  snowretroProg.c
 C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(47,31): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
 C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(47,34): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
 C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(48,32): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
 C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(48,35): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
 C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(39,1): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
 C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(40,1): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(22,29): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(48,95): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(42,1): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(105,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(106,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(107,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(99,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(312,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(313,51): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(316,49): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(317,61): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(318,62): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(376,1): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\retroProg.c(377,1): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-  shaders.c
-  windowCreation.c
-C:\Users\dafie\source\repos\GLTesting4\Project1\windowCreation.c(52,51): warning C4133: '=': incompatible types - from 'LPCSTR' to 'LPCWSTR'
-C:\Users\dafie\source\repos\GLTesting4\Project1\windowCreation.c(90,11): warning C4098: 'setup_hdc_for_opengl': 'void' function returning a value
-C:\Users\dafie\source\repos\GLTesting4\Project1\windowCreation.c(96,11): warning C4098: 'setup_hdc_for_opengl': 'void' function returning a value
-C:\Users\dafie\source\repos\GLTesting4\Project1\windowCreation.c(141,1): warning C4133: 'function': incompatible types - from 'LPCSTR' to 'LPCWSTR'
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(23,29): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(49,95): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(43,1): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(106,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(107,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(108,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(100,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(327,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(328,51): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(331,49): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(332,61): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(333,62): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(391,1): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(392,1): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
   Generating code
-  62 of 496 functions (12.5%) were compiled, the rest were copied from previous compilation.
-    2 functions were new in current compilation
-    14 functions had inline decision re-evaluated but remain unchanged
+C:\Users\dafie\source\repos\GLTesting4\Project1\pngReader.c(116): warning C4715: 'read_png_file': not all control paths return a value
+  76 of 519 functions (14.6%) were compiled, the rest were copied from previous compilation.
+    5 functions were new in current compilation
+    24 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\dafie\source\repos\GLTesting4\x64\Release\DesktopRenderer.exe

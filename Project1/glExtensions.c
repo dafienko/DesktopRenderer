@@ -87,6 +87,7 @@ void GLEInit() {
     glRenderbufferStorageMultisample = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)getProc("glRenderbufferStorageMultisample");
     glDeleteProgram = (PFNGLDELETEPROGRAMPROC)getProc("glDeleteProgram");
     glUniform2f = (PFNGLUNIFORM2FPROC)getProc("glUniform2f");
+    glDrawArraysInstanced = (PFNGLDRAWARRAYSINSTANCEDPROC)getProc("glDrawArraysInstanced");
 
     initialized = 1;
 }

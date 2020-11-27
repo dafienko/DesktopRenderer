@@ -13,8 +13,9 @@ uniform vec3 globalLightDir;
 
 void main()
 {    
-    color = texture(skybox, TexCoords);
-	
+    vec4 textureColor = texture(skybox, TexCoords);
+	color = textureColor * 2.5;
+
 	/*
 	float sunAngle = max(0, dot(normalize(-globalLightDir), normalize(TexCoords)));
 	sunAngle = pow(sunAngle, 32);
