@@ -18,6 +18,10 @@ void main() {
 	vec4 texColor = texture(tex, texPos);
 	float alpha = texColor.a;
 	
+	if(alpha < 0.5) {
+		discard;
+	}
+	
 	if (particleAlive != 0) {
 		if (renderColor != 0) {
 			FragColor = texColor;

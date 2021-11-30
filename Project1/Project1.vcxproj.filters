@@ -213,11 +213,11 @@
     <ClCompile Include="drawObject.c">
       <Filter>Source Files\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="snowretroProg.c">
-      <Filter>Source Files\programs</Filter>
-    </ClCompile>
     <ClCompile Include="particleEmitter.c">
       <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="snowretroProg.c">
+      <Filter>Source Files\programs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -29,7 +29,7 @@ int MSAASamples = 4;
 /* Bloom settings */
 float threshold = .7f;
 int bloomSize = 15;
-float bloomOffsetScale = 1.0f;
+float bloomOffsetScale = 2.5f;
 float intensity = 3.5f;
 
 int bufferWidth, bufferHeight;
@@ -618,7 +618,6 @@ float draw(int dWidth, int dHeight) {
 			SwapBuffers(glContextHDC);
 		}
 
-		/* */
 		memset(lpBits, 0, 4 * bufferWidth * bufferHeight);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);

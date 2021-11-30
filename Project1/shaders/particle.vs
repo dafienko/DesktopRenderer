@@ -13,7 +13,7 @@ out vec4 glPos;
 
 void main() {
 	texPos = quadCorner;
-	gl_Position = projMat * mvMat[gl_InstanceID] * vec4(quadPos.xy * 8.0, 0, 1.0);
+	gl_Position = projMat * mvMat[gl_InstanceID] * vec4(quadPos.xy * scale, 0, 1.0);
 	//gl_Position = vec4(quadPos.xy, 0.0, 1.0);
 	glPos = gl_Position;
 }

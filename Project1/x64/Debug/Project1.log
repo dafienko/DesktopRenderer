@@ -1,21 +1,4 @@
-﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(491,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (Project1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  main.c
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(35,66): warning C4047: 'function': 'LPARAM' differs in levels of indirection from 'void *'
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(35,62): warning C4024: 'EnumDisplayMonitors': different types for formal and actual parameter 4
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(42,36): warning C4047: '=': 'WNDPROC' differs in levels of indirection from 'WNDPROC (__cdecl *)(HWND,UINT,WPARAM,LPARAM)'
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(63,66): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(79,24): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(79,43): warning C4244: 'function': conversion from 'float' to 'int', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(87,8): warning C4013: 'error' undefined; assuming extern returning int
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(92,33): warning C4013: 'run_message_loop' undefined; assuming extern returning int
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(99,15): warning C4133: 'function': incompatible types - from 'HDC' to 'HWND'
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(99,27): warning C4133: 'function': incompatible types - from 'HWND' to 'HDC'
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(121,22): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(136,13): warning C4013: 'sprintf_s' undefined; assuming extern returning int
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(139,42): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(188,49): warning C4047: 'return': 'WNDPROC' differs in levels of indirection from 'LRESULT'
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(209,53): warning C4047: 'function': 'LPARAM' differs in levels of indirection from 'void *'
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(209,49): warning C4024: 'EnumDisplayMonitors': different types for formal and actual parameter 4
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(513,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (Project1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   snowretroProg.c
 C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(47,31): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
 C:\Users\dafie\source\repos\GLTesting4\Project1\perlin.h(47,34): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
@@ -30,13 +13,11 @@ C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(106,55): warning
 C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(107,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(108,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(100,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(327,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(328,51): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(331,49): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(332,61): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(333,62): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(391,1): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(392,1): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-  Generating Code...
-C:\Users\dafie\source\repos\GLTesting4\Project1\main.c(29): warning C4716: 'compare_monitor_dimensions': must return a value
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(328,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(329,51): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(332,49): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(333,61): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(334,62): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(392,1): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\dafie\source\repos\GLTesting4\Project1\snowretroProg.c(393,1): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
   Project1.vcxproj -> C:\Users\dafie\source\repos\GLTesting4\x64\Debug\DesktopRenderer.exe

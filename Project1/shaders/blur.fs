@@ -9,7 +9,7 @@ uniform float offsetScale;
 in vec2 pos;
 out vec4 color;
 
-const float c = .8f;
+const float c = .9f;
 
 float Gaussian(float x) {
 	return exp(-(x * x)/(.5 * c * c));

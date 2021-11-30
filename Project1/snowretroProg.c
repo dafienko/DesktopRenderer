@@ -115,20 +115,21 @@ void programInit(LPSTR args) {
     else {
         set_sun_color(1, .4f, 0);
     }
-   
+
     image_bit_data tibd = read_png_file("assets\\snowflake.png");
     GLuint sTexture = create_texture_from_ibd(tibd);
 
     Particle_Emitter* emitter = create_particle_emitter(
-        1500, // max particles
-        40.0f,  // rate
-        85.0f,  // speed
-        (vec3f) {.3f, -1.0f, .3f}, // emission direction
+        5000, // max particles
+        150.0f,  // rate
+        (vec3f) {
+            7, -85.0f, 72
+        }, // emission direction
         sTexture
     );
-    emitter->size = (vec3f){width * scale * 1.3f, 1.0f, length * scale * .5f};
-    emitter->position = (vec3f){ 0.0f, 3.5f * heightFactor, -emitter->size.z * .5f };
-    emitter->lifetime = (emitter->position.y + 300.0f) / emitter->speed;
+    emitter->size = (vec3f){ width * scale * 1.5f, 1.0f, length * scale * .5f };
+    emitter->position = (vec3f){ 0.0f, 3.5f * heightFactor, -emitter->size.z * 1.5f };
+    emitter->lifetime = (emitter->position.y + 300.0f) / -emitter->direction.y;
     emitter->position.x = -emitter->direction.x * emitter->lifetime;
 
     defaultSkybox = create_skybox_texture("assets/nightsky2.png");

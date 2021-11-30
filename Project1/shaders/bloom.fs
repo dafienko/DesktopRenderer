@@ -18,6 +18,7 @@ void main() {
 	color = texture(btex, texPos) * intensity;
 	color = vec4(color.xyz, 1);
 	
+	///*
 	if (msaa == 0) {
 		color += texture(tex, texPos);
 	} else {
@@ -26,8 +27,11 @@ void main() {
 		for (int i = 0; i < msaa; i++) {
 			texelColor += texelFetch(texms, ivec2(texPos.x, texPos.y), i);
 		}
-		color += texelColor / msaa;
+		texelColor /= msaa;
+		texelColor *= 1.5;
+		color += texelColor;
 	}
+	//*/
 }
 
 

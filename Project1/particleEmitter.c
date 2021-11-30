@@ -49,11 +49,9 @@ Particle create_particle_for_emitter(Particle_Emitter emitter) {
 		rand_rangef(0, 3.14 / 2),
 		rand_rangef(0, 3.14 / 2)
 	};
-	particle.velocity = emitter.direction;
-	particle.speed = emitter.speed * rand_rangef(1.0f, 1.2f);
+	particle.velocity = vector_mul_3f(emitter.direction, rand_rangef(1.0f, 1.2f));
 	particle.age = 0.0f;
 
-	particle.rotSpeed = 1.0f;
 	particle.rotVelocity = (vec3f){
 		rand_rangef(0, 3.14 / 2),
 		rand_rangef(0, 3.14 / 2),
@@ -113,10 +111,9 @@ void update_emitter(Particle_Emitter* emitterPtr, float dt) {
 		Particle* p = emitter.particles + i;
 
 		if (p->initialized) {
-			vec3f newPos = vector_add_3f(p->position, vector_mul_3f(p->velocity, dt * p->speed));
-			p->position = newPos;
+			p->position = vector_add_3f(p->position, vector_mul_3f(p->velocity, dt));
 
-			p->orientation = vector_add_3f(p->orientation, vector_mul_3f(p->rotVelocity, dt * p->rotSpeed));
+			p->orientation = vector_add_3f(p->orientation, vector_mul_3f(p->rotVelocity, dt));
 		}
 	}
 	
@@ -152,6 +149,8 @@ void render_emitter(Particle_Emitter emitter, mat4f cameraMatrix, mat4f perspect
 	glBindBuffer(GL_ARRAY_BUFFER, *(pVBO + 1));
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+
+	glUniform1f(sLoc, 5.0f);
 
 	float* vals = get_vals_mat4f(perspectiveMatrix);
 	glUniformMatrix4fv(pLoc, 1, GL_FALSE, vals);
@@ -254,7 +253,7 @@ Particle_Emitter* add_emitter(Particle_Emitter emitter) {
 	return ptr;
 }
 
-Particle_Emitter* create_particle_emitter(int maxParticles, float rate, float speed, vec3f dir, GLuint tex) {
+Particle_Emitter* create_particle_emitter(int maxParticles, float rate, vec3f dir, GLuint tex) {
 	if (!emittersInitialized) {
 		init_emitters();
 	}
@@ -263,8 +262,7 @@ Particle_Emitter* create_particle_emitter(int maxParticles, float rate, float sp
 
 	emitter.maxParticles = maxParticles;
 	emitter.emissionRate = rate;
-	emitter.direction = normalize_3f(dir);
-	emitter.speed = speed;
+	emitter.direction = dir;
 	emitter.numParticlesF = 0.0f;
 	emitter.numParticles = 0;
 	emitter.texId = tex;

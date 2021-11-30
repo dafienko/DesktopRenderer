@@ -8,8 +8,6 @@
 typedef struct {
 	vec3f velocity;
 	vec3f rotVelocity;
-	float rotSpeed;
-	float speed;
 	vec3f position;
 	vec3f orientation;
 	float age;
@@ -22,7 +20,6 @@ typedef struct {
 	int maxParticles;
 	int emissionRate;
 	vec3f direction;
-	float speed;
 	vec3f position;
 	vec3f size;
 	float lifetime;
@@ -32,7 +29,9 @@ typedef struct {
 	float numParticlesF;
 } Particle_Emitter;
 
-Particle_Emitter* create_particle_emitter(int maxParticles, float rate, float speed, vec3f dir, GLuint tex);
+Particle_Emitter* create_particle_emitter(int maxParticles, float rate, vec3f dir, GLuint tex);
+
+float rand_rangef(float min, float max);
 
 void render_emitters(mat4f cameraMatrix, mat4f perspectiveMatrix, int renderColor);
 void updateEmitters(float dt);

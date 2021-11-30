@@ -5,8 +5,8 @@
 #include "program.h"
 #include "assetLoader.h"
 #include <Vfw.h>
-#include "timer.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 #pragma comment(lib, "Vfw32.lib")
 
@@ -26,6 +26,7 @@ BOOL compare_monitor_dimensions(HMONITOR hMonitor, HDC hdc, LPRECT pRect, LPARAM
 	biggestHeight = max(biggestHeight, pRect->bottom - pRect->top);
 	origin.x = min(pRect->left, origin.x);
 	origin.y = min(pRect->top, origin.y);
+	return TRUE;
 }
 
 void get_biggest_monitor_size() {
@@ -54,7 +55,6 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	float scale = 1.0f;
 
 	get_biggest_monitor_size();
-
 	vec2i wndSize = { 0 };
 	if (RENDER_TO_WINDOW) {
 		wndSize = (vec2i){ 800, 600 };
@@ -88,6 +88,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	}
 	
 	programInit(lpCmdLine);
+
 
 	int exitCode = run_message_loop();
 
